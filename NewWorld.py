@@ -16,7 +16,7 @@ class LandingPage(webapp2.RequestHandler):
         msg=""
         
         if user:
-            msg="Hello, !"+user.nickname+" !"
+            msg="Hello, !"+str(user.nickname)+" !"
         else :
             self.redirect(users.create_login_url(self.request.uri))
         
