@@ -7,3 +7,15 @@ threadsafe: true
 handlers:
 - url: /.*
   script: NewWorld.application
+  
+- url: /css
+  static_dir: static/stylesheets
+  
+- url: /js
+  static_dir: static/javascript
+  
+libraries:
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
