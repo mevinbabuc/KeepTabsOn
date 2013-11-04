@@ -22,7 +22,7 @@ class login(webapp2.RequestHandler):
         self.redirect("/")
 
         
-class landingPage(webapp2.RequestHandler):
+class renderPage(webapp2.RequestHandler):
     
     def get(self):
         
@@ -38,5 +38,5 @@ class landingPage(webapp2.RequestHandler):
 
 application = webapp2.WSGIApplication([
     ('/login', login),
-    ('/',landingPage),
+    ('/render',renderPage),
 ], debug=True)
