@@ -19,7 +19,6 @@ class login(webapp2.RequestHandler):
         else :
             self.redirect(users.create_login_url(self.request.uri))
             
-        self.redirect("/")
 
         
 class renderPage(webapp2.RequestHandler):
