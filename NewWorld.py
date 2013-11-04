@@ -13,23 +13,30 @@ class login(webapp2.RequestHandler):
 
     def get(self):
         user=users.get_current_user()
-        msg=""
         
         if user:
-            msg="Hello, !"+str(user.nickname())+" !"
+            self.redirect("/")
         else :
             self.redirect(users.create_login_url(self.request.uri))
+            
+        self.redirect("/")
 
         
-
-class landingPage(webapp2.Requesthandler):
+class landingPage(webapp2.RequestHandler):
     
     def get(self):
-         
+        
+        msg="Hello !"
+        user=users.get_current_user()
+        
+        if user:
+            msg="Hello, "+str(user.nickname())+"!"
+            
         values={ 'msg':msg,   }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(values))
 
 application = webapp2.WSGIApplication([
     ('/login', login),
+    ('/',landingPage),
 ], debug=True)
