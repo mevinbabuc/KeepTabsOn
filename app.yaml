@@ -8,6 +8,9 @@ handlers:
 - url: /
   script: NewWorld.application
   
+- url: /login
+  script: NewWorld.application
+  
 - url: /css
   static_dir: static/stylesheets
   
