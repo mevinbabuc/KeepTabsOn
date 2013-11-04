@@ -12,14 +12,13 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 class login(webapp2.RequestHandler):
 
     def get(self):
-        user=users.get_current_user()
-        
+        user = users.get_current_user()
+
         if user:
-            self.redirect("/")
-        else :
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.write('Hello, ' + user.nickname())
+        else:
             self.redirect(users.create_login_url(self.request.uri))
-            
-        self.response.write("hellooo");
         
             
 
