@@ -19,6 +19,9 @@ class login(webapp2.RequestHandler):
         else :
             self.redirect(users.create_login_url(self.request.uri))
             
+        self.response.write("hellooo");
+        
+            
 
         
 class renderPage(webapp2.RequestHandler):
