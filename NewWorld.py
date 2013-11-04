@@ -9,7 +9,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-class LandingPage(webapp2.RequestHandler):
+class login(webapp2.RequestHandler):
 
     def get(self):
         user=users.get_current_user()
@@ -19,12 +19,17 @@ class LandingPage(webapp2.RequestHandler):
             msg="Hello, !"+str(user.nickname())+" !"
         else :
             self.redirect(users.create_login_url(self.request.uri))
+
         
+
+class landingPage(webapp2.Requesthandler):
+    
+    def get(self):
+         
         values={ 'msg':msg,   }
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(values))
 
-
 application = webapp2.WSGIApplication([
-    ('/', LandingPage),
+    ('/login', login),
 ], debug=True)
