@@ -19,6 +19,17 @@ class login(webapp2.RequestHandler):
         else:
             self.redirect(users.create_login_url(self.request.uri))
         
+class Add(webapp2.RequestHandler):
+
+    def post(self):
+        title = self.request.get("title")
+        hashtags = self.request.get("hashtags")
+        self.response.write(str(title)+" "+str(hashtags))
+
+class Remove(webapp2.RequestHandler):
+
+    def post(self):
+        noteId = self.request.get("noteId")
 
 class renderPage(webapp2.RequestHandler):
     
