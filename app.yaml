@@ -6,20 +6,27 @@ threadsafe: true
 
 handlers:
 - url: /
-  static_files: static_html/index.html
-  
+  static_files: static/static_html/index.html
+  upload: static/(.*\.(gif|png|jpg))
+
 - url: /login
-  script: controller.application
-  
+  script: KeepTabsOn.application
+
+- url: /add
+  script: KeepTabsOn.application
+
+- url: /remove
+  script: KeepTabsOn.application
+
 - url: /render
-  script: controller.application
-  
+  script: KeepTabsOn.application
+
 - url: /css
   static_dir: static/stylesheets
-  
+
 - url: /js
   static_dir: static/javascript
-  
+
 libraries:
 - name: webapp2
   version: latest

@@ -12,5 +12,17 @@
     {{ msg }}
     
     <a href="/login">Login to KeepTabsOn</a>
+
+	<form method="PUT" action="/add">
+		<input type="text" name="title">
+		<input type="text" name="hashtags">
+		<input type="submit" />
+	</form>
+
+	<form method="DELETE" action="/remove">
+		<input type="text" name="noteId">
+		<input type="submit" />
+	</form>
+
 </body>
 </html>
