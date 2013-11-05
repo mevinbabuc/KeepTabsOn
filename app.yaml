@@ -6,13 +6,13 @@ threadsafe: true
 
 handlers:
 - url: /
-  static_files: index.html
+  static_files: static_html/index.html
   
 - url: /login
-  script: NewWorld.application
+  script: controller.application
   
 - url: /render
-  script: NewWorld.application
+  script: controller.application
   
 - url: /css
   static_dir: static/stylesheets
