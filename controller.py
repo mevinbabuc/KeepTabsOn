@@ -30,6 +30,7 @@ class Remove(webapp2.RequestHandler):
 
     def post(self):
         noteId = self.request.get("noteId")
+        self.response.write(str(noteId))
 
 class renderPage(webapp2.RequestHandler):
     
