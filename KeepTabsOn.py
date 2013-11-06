@@ -23,7 +23,7 @@ class Note(ndb.Model):
     # author = ndb.UserProperty()
     title = ndb.StringProperty(indexed=False)
     content = ndb.StringProperty(indexed=False)
-    hashtag = db.StringListProperty()
+    hashtag = ndb.StringProperty(repeated=True)
     last_viewed = ndb.DateTimeProperty(auto_now_add=True)
 
 
