@@ -17,6 +17,9 @@ handlers:
 
 - url: /remove
   script: KeepTabsOn.application
+  
+- url: /view
+  script: KeepTabsOn.application
 
 - url: /render
   script: KeepTabsOn.application
