@@ -20,7 +20,7 @@ class HashStore(ndb.Model):
 
 class Note(ndb.Model):
     """Models an individual Note entry."""
-    # author = ndb.UserProperty()
+    author = ndb.UserProperty()
     title = ndb.StringProperty(indexed=False)
     content = ndb.StringProperty(indexed=False)
     hashtag = ndb.StringProperty(repeated=True)
@@ -46,7 +46,7 @@ class Add(webapp2.RequestHandler):
         HashEntry=HashStore(hastag=NoteHashtags,content="data")
         HashEntry.put()
         
-        NoteEntry = Note(parent=ndb.Key(users,users.get_current_user()),hashtag=NoteHashtags,title=NoteTitle)
+        NoteEntry = Note(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
         NoteEntry.content="data"
         NoteEntry.put()
 
@@ -62,8 +62,7 @@ class View(webapp2.RequestHandler):
     def get(self):
         # noteId = self.request.get("noteId")
         
-        key = ndb.Key(users.get_current_user())
-        qry = Note.query(ancestor=key)
+        qry = Note.query(author=users.get_current_user())
         
         self.response.write(str(qry))
 
