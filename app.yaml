@@ -7,9 +7,9 @@ threadsafe: true
 handlers:
 - url: /
   static_files: static/static_html/index.html
-  upload: static/(.*\.(gif|png|jpg))
+  upload: static/static_html/index.html
 
-- url: /(.*)
+- url: /(.+)
   script: KeepTabsOn.application
 
 - url: /css
