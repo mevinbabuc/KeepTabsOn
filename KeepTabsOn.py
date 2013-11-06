@@ -44,7 +44,7 @@ class Add(webapp2.RequestHandler):
         NoteHashtags = []
         NoteHashtags.append(self.request.get("hashtags"))
         
-        HashEntry=HashStore(hastag=NoteHashtags,content="data")
+        HashEntry=HashStore(hastag=str(repr(NoteHashtags)),content="data")
         HashEntry.put()
         
         NoteEntry = Note(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
