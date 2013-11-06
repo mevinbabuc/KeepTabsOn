@@ -41,7 +41,8 @@ class Add(webapp2.RequestHandler):
 
     def post(self):
         NoteTitle = self.request.get("title")
-        NoteHashtags = self.request.get("hashtags")
+        NoteHashtags = []
+        NoteHashtags.append(self.request.get("hashtags"))
         
         HashEntry=HashStore(hastag=NoteHashtags,content="data")
         HashEntry.put()
