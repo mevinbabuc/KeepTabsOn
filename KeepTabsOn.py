@@ -46,7 +46,7 @@ class Add(webapp2.RequestHandler):
         HashEntry=HashStore(hastag=NoteHashtags,content="data")
         HashEntry.put()
         
-        NoteEntry = Note(parent=ndb.Key(users.get_current_user()),hashtag=NoteHashtags,title=NoteTitle)
+        NoteEntry = Note(parent=ndb.Key(users,users.get_current_user()),hashtag=NoteHashtags,title=NoteTitle)
         NoteEntry.content="data"
         NoteEntry.put()
 
