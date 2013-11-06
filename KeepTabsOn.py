@@ -11,18 +11,20 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 
-​class HashStore(ndb.Model):
+class HashStore(ndb.Model):
     """Models an individual HashStore entry with hastag, content, and date."""
-    hastag = ndb.StringProperty(indexed=False)
+    hastag = ndb.StringProperty(indexed=True)
     content = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
 
 
-​class Data(ndb.Model):
-    """Models an individual Guestbook entry with author, content, and date."""
-    author = ndb.UserProperty()
+class Note(ndb.Model):
+    """Models an individual Note entry."""
+    # author = ndb.UserProperty()
+    title = ndb.StringProperty(indexed=False)
     content = ndb.StringProperty(indexed=False)
-    date = ndb.DateTimeProperty(auto_now_add=True)
+    hashtag = db.StringListProperty()
+    last_viewed = ndb.DateTimeProperty(auto_now_add=True)
 
 
 class login(webapp2.RequestHandler):
@@ -37,16 +39,33 @@ class login(webapp2.RequestHandler):
         
 class Add(webapp2.RequestHandler):
 
-    def put(self):
-        title = self.request.get("title")
-        hashtags = self.request.get("hashtags")
-        self.response.write(str(title)+" "+str(hashtags))
+    def post(self):
+        NoteTitle = self.request.get("title")
+        NoteHashtags = self.request.get("hashtags")
+        
+        HashEntry=HashStore(hastag=NoteHashtags,content="data")
+        HashEntry.put()
+        
+        NoteEntry = Note(parent=ndb.Key(users.get_current_user()),hashtag=NoteHashtags,title=NoteTitle)
+        NoteEntry.content="data"
+        NoteEntry.put()
+
 
 class Remove(webapp2.RequestHandler):
 
-    def delete(self):
+    def post(self):
         noteId = self.request.get("noteId")
         self.response.write(str(noteId))
+        
+class View(webapp2.RequestHandler):
+
+    def get(self):
+        # noteId = self.request.get("noteId")
+        
+        key = ndb.Key(users.get_current_user())
+        qry = Note.query(ancestor=key)
+        
+        self.response.write(str(qry))
 
 class renderPage(webapp2.RequestHandler):
     
@@ -67,4 +86,5 @@ application = webapp2.WSGIApplication([
     ('/render',renderPage),
     ('/add',Add),
     ('/remove',Remove),
+    ('/view',View),
 ], debug=True)
