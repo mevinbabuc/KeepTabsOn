@@ -9,19 +9,7 @@ handlers:
   static_files: static/static_html/index.html
   upload: static/(.*\.(gif|png|jpg))
 
-- url: /login
-  script: KeepTabsOn.application
-
-- url: /add
-  script: KeepTabsOn.application
-
-- url: /remove
-  script: KeepTabsOn.application
-  
-- url: /view
-  script: KeepTabsOn.application
-
-- url: /render
+- url: /(.*)
   script: KeepTabsOn.application
 
 - url: /css
