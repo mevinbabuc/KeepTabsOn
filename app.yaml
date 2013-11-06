@@ -9,14 +9,16 @@ handlers:
   static_files: static/static_html/index.html
   upload: static/static_html/index.html
 
-- url: /(.+)
-  script: KeepTabsOn.application
-
 - url: /css
+  mime_type: text/css
   static_dir: static/stylesheets
 
 - url: /js
+  mime_type: text/javascript
   static_dir: static/javascript
+  
+- url: /(.+)
+  script: KeepTabsOn.application
 
 libraries:
 - name: webapp2
