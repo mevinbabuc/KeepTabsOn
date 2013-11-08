@@ -63,9 +63,9 @@ class View(webapp2.RequestHandler):
     def get(self):
         # noteId = self.request.get("noteId")
         
-        qry = Note.query(author=users.get_current_user())
-        
-        self.response.write(str(qry))
+        qry = Note.query().filter(Note.author==users.get_current_user())
+        for temp in qry:
+            self.response.write(str(temp.title)+" "+str(temp.hashtag)+" "+str(temp.author))
 
 class renderPage(webapp2.RequestHandler):
     
