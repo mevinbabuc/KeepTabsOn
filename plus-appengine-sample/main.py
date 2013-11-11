@@ -33,7 +33,7 @@ from google.appengine.api import memcache
 
 import webapp2
 import jinja2
-
+import json
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -84,18 +84,39 @@ class MainHandler(webapp2.RequestHandler):
     self.response.write(template.render(variables))
 
 class Yo(webapp2.RequestHandler):
+  
   @decorator.oauth_aware
-  def get(self):
-    temp=service.activities().search(query='wolff').execute()
-    if 'items' in temp:
-      self.response.write('got page with '+str(len( temp['items'] )))
-      for activity in temp['items']:
-        self.response.write(str(activity['id'])+" "+str(activity['object']['content']))
+  def get(self,query):
+
+    TagDataSuper=[]
+    for eachHashTag in query.split(","):
+      kp=decorator.http()
+      temp=service.activities().search(query=str(eachHashTag.strip()),orderBy="recent",maxResults=2,language="en-GB").execute(http=kp)
+      print eachHashTag
+      dataList=[]
+      if 'items' in temp:
+        #self.response.write('got page with '+str(len( temp['items'] )))
+        for activity in temp['items']:
+          dataObject={}
+          dataObject["post_url"]=activity['url'].encode('utf-8').strip()
+          dataObject["title"]=activity['title'].encode('utf-8').strip()
+          dataObject["date"]=activity['published'].encode('utf-8').strip()
+          dataObject["user"]=activity["actor"]["displayName"].strip()
+          dataObject["user_url"]=activity["actor"]["url"].strip()
+          dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
+          dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
+          if 'attachments' in activity['object'] :
+            dataObject["attached_content"]=activity['object']['attachments']
+          # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
+          dataList.append(dataObject)
+      TagDataSuper.append(dataList) 
+    self.response.headers['Content-Type'] = 'application/json' 
+    self.response.write(json.dumps(TagDataSuper))
 
 app = webapp2.WSGIApplication(
     [
      ('/', MainHandler),
-     ('/yo', Yo),
+     (r'/tag/(.*)',Yo),
      (decorator.callback_path, decorator.callback_handler()),
     ],
     debug=True)
