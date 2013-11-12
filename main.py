@@ -30,6 +30,8 @@ from apiclient import discovery
 from oauth2client import appengine
 from oauth2client import client
 from google.appengine.api import memcache
+from google.appengine.api import users
+from google.appengine.ext import ndb
 
 import webapp2
 import jinja2
@@ -72,6 +74,24 @@ decorator = appengine.oauth2decorator_from_clientsecrets(
     ],
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
+
+class HashStore(ndb.Model):
+    """Models an individual HashStore entry with hastag, content, and date."""
+    hastag = ndb.StringProperty(indexed=True)
+    content = ndb.StringProperty(indexed=False)
+    date = ndb.DateTimeProperty(auto_now_add=True)
+
+
+class Note(ndb.Model):
+    """Models an individual Note entry."""
+    author = ndb.UserProperty()
+    title = ndb.StringProperty(indexed=False)
+    content = ndb.StringProperty(indexed=False)
+    hashtag = ndb.StringProperty(repeated=True)
+    last_viewed = ndb.DateTimeProperty(auto_now_add=True)
+
+
+
 class MainHandler(webapp2.RequestHandler):
 
   @decorator.oauth_aware
@@ -83,17 +103,70 @@ class MainHandler(webapp2.RequestHandler):
     template = JINJA_ENVIRONMENT.get_template('main.html')
     self.response.write(template.render(variables))
 
-class Yo(webapp2.RequestHandler):
+class login(webapp2.RequestHandler):
+
+    def get(self):
+        user = users.get_current_user()
+
+        if user:
+            self.redirect("/")
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+        
+class Add(webapp2.RequestHandler):
+
+  def post(self):
+      NoteTitle = self.request.get("title")
+      NoteHashtags = []
+      NoteHashtags.append(self.request.get("hashtags"))
+      
+      HashEntry=HashStore(hastag=str(repr(NoteHashtags)),content="data")
+      HashEntry.put()
+      
+      NoteEntry = Note(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
+      NoteEntry.content="data"
+      NoteEntry.put()
+
+
+class Remove(webapp2.RequestHandler):
+
+  def post(self):
+      noteId = self.request.get("noteId")
+      self.response.write(str(noteId))
+        
+class View(webapp2.RequestHandler):
+
+  def get(self):
+      # noteId = self.request.get("noteId")
+      
+      qry = Note.query().filter(Note.author==users.get_current_user())
+      for temp in qry:
+          self.response.write(str(temp.title)+" "+str(temp.hashtag)+" "+str(temp.author))
+
+class renderPage(webapp2.RequestHandler):
+    
+  def get(self):
+      
+      msg="Hello !"
+      user=users.get_current_user()
+      
+      if user:
+          msg="Hello, "+str(user.nickname())+"!"
+          
+      values={ 'msg':msg,   }
+      template = JINJA_ENVIRONMENT.get_template('static/static_html/index.html')
+      self.response.write(template.render(values))
+
+
+class TagSearch(webapp2.RequestHandler):
   
   @decorator.oauth_aware
-  def get(self,query):
+  def get(self,orderBy,query):
 
     TagDataSuper=[]
-    print str(query)+"mummmmmmmmmmmmmmmmmmmm"
     for eachHashTag in query.split(","):
       kp=decorator.http()
-      temp=service.activities().search(query=str(eachHashTag.strip()),orderBy="best",maxResults=20,language="en-GB").execute(http=kp)
-      print eachHashTag+"BOooommmmmmmmmmmmmmmmmmmmmmmmmm"
+      temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
       dataList=[]
       if 'items' in temp:
         #self.response.write('got page with '+str(len( temp['items'] )))
@@ -116,8 +189,13 @@ class Yo(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication(
     [
-     webapp2.Route(r'/', MainHandler),
-     webapp2.Route(r'/tag/<:.*>', Yo),
-     (decorator.callback_path, decorator.callback_handler()),
+      webapp2.Route(r'/', MainHandler),
+      webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', TagSearch),
+      ('/login', login),
+      ('/render',renderPage),
+      ('/add',Add),
+      ('/remove',Remove),
+      ('/view',View),
+      (decorator.callback_path, decorator.callback_handler()),
     ],
     debug=True)
