@@ -16,7 +16,7 @@ handlers:
 - url: /js
   mime_type: text/javascript
   static_dir: static/javascript
-  
+
 - url: /(.+)
   script: KeepTabsOn.application
 

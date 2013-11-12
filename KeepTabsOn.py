@@ -16,6 +16,8 @@ import webapp2
 import jinja2
 import json
 
+import tweepy
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     autoescape=True,
@@ -69,9 +71,11 @@ class MainHandler(webapp2.RequestHandler):
 
   @decorator.oauth_aware
   def get(self):
+    auth = tweepy.OAuthHandler("i96lx1P2EN4TD8yDf2ayg", "BND5qHEn9LKXtZcsW2PwunWo3Ao3KNzy5c9pUVpJg")
     variables = {
-        'url': decorator.authorize_url(),
-        'has_credentials': decorator.has_credentials()
+        'google_url': decorator.authorize_url(),
+        'google': decorator.has_credentials(),
+        'twitter_url':auth.get_authorization_url()
         }
     template = JINJA_ENVIRONMENT.get_template('main.html')
     self.response.write(template.render(variables))
