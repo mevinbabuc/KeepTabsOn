@@ -127,7 +127,7 @@ class renderPage(webapp2.RequestHandler):
           msg="Hello, "+str(user.nickname())+"!"
           
       values={ 'msg':msg,   }
-      template = JINJA_ENVIRONMENT.get_template('static/static_html/index.html')
+      template = JINJA_ENVIRONMENT.get_template('templates/index.html')
       self.response.write(template.render(values))
 
 
@@ -160,7 +160,7 @@ class TagSearch(webapp2.RequestHandler):
     self.response.headers['Content-Type'] = 'application/json' 
     self.response.write(json.dumps(TagDataSuper))
 
-app = webapp2.WSGIApplication(
+application = webapp2.WSGIApplication(
     [
       webapp2.Route(r'/u/', MainHandler),
       webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', TagSearch),
