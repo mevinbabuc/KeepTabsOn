@@ -89,10 +89,11 @@ class Yo(webapp2.RequestHandler):
   def get(self,query):
 
     TagDataSuper=[]
+    print str(query)+"mummmmmmmmmmmmmmmmmmmm"
     for eachHashTag in query.split(","):
       kp=decorator.http()
-      temp=service.activities().search(query=str(eachHashTag.strip()),orderBy="recent",maxResults=2,language="en-GB").execute(http=kp)
-      print eachHashTag
+      temp=service.activities().search(query=str(eachHashTag.strip()),orderBy="best",maxResults=20,language="en-GB").execute(http=kp)
+      print eachHashTag+"BOooommmmmmmmmmmmmmmmmmmmmmmmmm"
       dataList=[]
       if 'items' in temp:
         #self.response.write('got page with '+str(len( temp['items'] )))
@@ -115,8 +116,8 @@ class Yo(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication(
     [
-     ('/', MainHandler),
-     (r'/tag/(.*)',Yo),
+     webapp2.Route(r'/', MainHandler),
+     webapp2.Route(r'/tag/<:.*>', Yo),
      (decorator.callback_path, decorator.callback_handler()),
     ],
     debug=True)
