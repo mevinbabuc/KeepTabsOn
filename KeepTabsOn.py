@@ -173,6 +173,6 @@ application = webapp2.WSGIApplication(
       ('/add',Add),
       ('/remove',Remove),
       ('/view',View),
-      (decorator.callback_path, decorator.callback_handler()),
+      webapp2.Route(decorator.callback_path, decorator.callback_handler()),
     ],
     debug=True)
