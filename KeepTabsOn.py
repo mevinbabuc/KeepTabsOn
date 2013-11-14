@@ -44,7 +44,6 @@ service = discovery.build('plus', 'v1', http=http)
 decorator = appengine.oauth2decorator_from_clientsecrets(
     CLIENT_SECRETS,
     scope=[
-      'https://www.googleapis.com/auth/plus.login',
       'https://www.googleapis.com/auth/plus.me',
     ],
     message=MISSING_CLIENT_SECRETS_MESSAGE)
