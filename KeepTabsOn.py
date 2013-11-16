@@ -28,7 +28,7 @@ MISSING_CLIENT_SECRETS_MESSAGE = """
 <p>
 Server Error :(
 </p>
-""" % CLIENT_SECRETS
+"""
 
 http = httplib2.Http(memcache)
 service = discovery.build('plus', 'v1', http=http)
