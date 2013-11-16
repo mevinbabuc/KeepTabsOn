@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>Settings</title>
+  </head>
+  <body>
+
+    {% if google %}
+    <p>
+      Thanks for granting this application permission to access your data using the Google+ API.
+    </p>
+    {% else %}
+    <p>
+    <blockquote>
+      <a href="{{ google_url }}">Authorize Google</a>
+    </blockquote>
+    {% endif %}
+    <p>
+      You can always <a href="https://www.google.com/accounts/b/0/IssuedAuthSubTokens">revoke</a> permission at any time.
+    </p>
+
+  </body>
+</html>
