@@ -43,7 +43,7 @@ class HashStore(ndb.Model):
     """Models an individual HashStore entry with hastag, tile, and date."""
     author = ndb.UserProperty()
     title = ndb.StringProperty(indexed=False)
-    hastag = ndb.StringProperty(indexed=False, default="")
+    hashtag = ndb.StringProperty(indexed=False, default="")
     viewDate = ndb.DateTimeProperty(auto_now_add=True)
 
 class Add(webapp2.RequestHandler):
