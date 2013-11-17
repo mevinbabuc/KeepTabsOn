@@ -73,7 +73,7 @@ class View(webapp2.RequestHandler):
             dataObject={}
             dataObject["title"]=temp.title
             dataObject["hashtag"]=temp.hashtag
-            dataObject["viewDate"]=temp.viewDate
+            dataObject["viewDate"]=temp.viewDate.strftime("%Y/%m/%d %H:%M")
 
             dataList.append(dataObject)
 
