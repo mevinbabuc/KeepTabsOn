@@ -24,9 +24,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
 
 MISSING_CLIENT_SECRETS_MESSAGE = """
-<h1>ERROR: I'm broke now :(</h1>
+<h1>ERROR: :| </h1>
 <p>
-Server Error :(
+Try back again later.
 </p>
 """
 
@@ -39,6 +39,7 @@ decorator = appengine.oauth2decorator_from_clientsecrets(
     ],
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
+#Hashtag datastore
 class HashStore(ndb.Model):
     """Models an individual HashStore entry with hastag, tile, and date."""
     author = ndb.UserProperty()
@@ -46,26 +47,33 @@ class HashStore(ndb.Model):
     hashtag = ndb.StringProperty(indexed=True, default="")
     viewDate = ndb.DateTimeProperty(auto_now_add=True)
 
-class Add(webapp2.RequestHandler):
+#Rest processing for KeepTabsOn
+class ResT(webapp2.RequestHandler):
 
-    def post(self):
+    #add objects to datastore
+    @decorator.oauth_aware
+    def put(self):
+
         NoteTitle = self.request.get("title")
         NoteHashtags = self.request.get("hashtags")
 
         HashEntry=HashStore(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
-        HashEntry.put()
+        key=HashEntry.put()
 
         status={}
         status["error"]=None
         status["success"]=True
 
+        if not key:
+            status["success"]=False
+            status["error"]="Unable to Add your Tab.Try again"
+
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(status))
 
-class View(webapp2.RequestHandler):
-
+    #view the list of objects in datastore
+    @decorator.oauth_aware
     def get(self):
-        # noteId = self.request.get("noteId")
 
         qry = HashStore.query().filter(HashStore.author==users.get_current_user())
         dataList=[]
@@ -80,9 +88,10 @@ class View(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(dataList))
 
-class Remove(webapp2.RequestHandler):
+    #delete objects from datstore
+    @decorator.oauth_aware
+    def delete(self):
 
-    def post(self):
         hashtags = self.request.get("hashtags")
         qry = HashStore.query().filter(HashStore.author==users.get_current_user(),HashStore.hashtag==hashtags).fetch(keys_only=True)
         ndb.delete_multi(qry)
@@ -91,8 +100,13 @@ class Remove(webapp2.RequestHandler):
         status["error"]=None
         status["success"]=True
 
+        if not hashtags:
+            status["error"]="Note not specified in the request"
+            status["success"]=False
+
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(status))
+
 
 class MainHandler(webapp2.RequestHandler):
 
@@ -148,10 +162,8 @@ application = webapp2.WSGIApplication(
     [
         webapp2.Route(r'/u/', MainHandler),
         webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', TagSearch),
+        webapp2.Route(r'/tag/', ResT),
         ('/login', login),
-        ('/add',Add),
-        ('/remove',Remove),
-        ('/view',View),
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
     ],
     debug=True)
