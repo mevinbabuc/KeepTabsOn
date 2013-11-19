@@ -52,7 +52,7 @@ class ResT(webapp2.RequestHandler):
 
     #add objects to datastore
     @decorator.oauth_aware
-    def put(self):
+    def put(self,orderBy="",query=""):
 
         NoteTitle = self.request.get("title")
         NoteHashtags = self.request.get("hashtags")
@@ -73,7 +73,7 @@ class ResT(webapp2.RequestHandler):
 
     #view the list of objects in datastore
     @decorator.oauth_aware
-    def get(self):
+    def get(self,orderBy="",query=""):
 
         qry = HashStore.query().filter(HashStore.author==users.get_current_user())
         dataList=[]
@@ -90,9 +90,9 @@ class ResT(webapp2.RequestHandler):
 
     #delete objects from datstore
     @decorator.oauth_aware
-    def delete(self):
+    def delete(self,query,orderBy=""):
 
-        hashtags = self.request.get("hashtags")
+        hashtags = query.strip()
         qry = HashStore.query().filter(HashStore.author==users.get_current_user(),HashStore.hashtag==hashtags).fetch(keys_only=True)
         ndb.delete_multi(qry)
 
@@ -101,11 +101,40 @@ class ResT(webapp2.RequestHandler):
         status["success"]=True
 
         if not hashtags:
-            status["error"]="Note not specified in the request"
+            status["error"]="Note not specified in the request "+query
             status["success"]=False
 
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(status))
+
+
+    #search function using POST :| 
+    @decorator.oauth_aware
+    def post(self,orderBy,query):
+
+        TagDataSuper=[]
+        for eachHashTag in query.split(","):
+            kp=decorator.http()
+            temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
+            dataList=[]
+            if 'items' in temp:
+            #self.response.write('got page with '+str(len( temp['items'] )))
+                for activity in temp['items']:
+                    dataObject={}
+                    dataObject["post_url"]=activity['url'].encode('utf-8').strip()
+                    dataObject["title"]=activity['title'].encode('utf-8').strip()
+                    dataObject["date"]=activity['published'].encode('utf-8').strip()
+                    dataObject["user"]=activity["actor"]["displayName"].strip()
+                    dataObject["user_url"]=activity["actor"]["url"].strip()
+                    dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
+                    dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
+                    if 'attachments' in activity['object'] :
+                        dataObject["attached_content"]=activity['object']['attachments']
+                        # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
+                    dataList.append(dataObject)
+            TagDataSuper.append(dataList) 
+        self.response.headers['Content-Type'] = 'application/json' 
+        self.response.write(json.dumps(TagDataSuper))
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -129,40 +158,11 @@ class login(webapp2.RequestHandler):
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
-class TagSearch(webapp2.RequestHandler):
-  
-  @decorator.oauth_aware
-  def get(self,orderBy,query):
-
-    TagDataSuper=[]
-    for eachHashTag in query.split(","):
-        kp=decorator.http()
-        temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
-        dataList=[]
-        if 'items' in temp:
-        #self.response.write('got page with '+str(len( temp['items'] )))
-            for activity in temp['items']:
-                dataObject={}
-                dataObject["post_url"]=activity['url'].encode('utf-8').strip()
-                dataObject["title"]=activity['title'].encode('utf-8').strip()
-                dataObject["date"]=activity['published'].encode('utf-8').strip()
-                dataObject["user"]=activity["actor"]["displayName"].strip()
-                dataObject["user_url"]=activity["actor"]["url"].strip()
-                dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
-                dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
-                if 'attachments' in activity['object'] :
-                    dataObject["attached_content"]=activity['object']['attachments']
-                    # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
-                dataList.append(dataObject)
-        TagDataSuper.append(dataList) 
-    self.response.headers['Content-Type'] = 'application/json' 
-    self.response.write(json.dumps(TagDataSuper))
-
 application = webapp2.WSGIApplication(
     [
         webapp2.Route(r'/u/', MainHandler),
-        webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', TagSearch),
-        webapp2.Route(r'/tag/', ResT),
+        webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', ResT),
+        webapp2.Route(r'/tag/<query:.*>', ResT),
         ('/login', login),
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
     ],
