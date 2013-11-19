@@ -68,6 +68,7 @@ class ResT(webapp2.RequestHandler):
             status["success"]=False
             status["error"]="Unable to Add your Tab.Try again"
 
+        self.response.headers.add_header('Access-Control-Allow-Origin', '*')
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(status))
 
@@ -85,6 +86,7 @@ class ResT(webapp2.RequestHandler):
 
             dataList.append(dataObject)
 
+        self.response.headers.add_header('Access-Control-Allow-Origin', '*')
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(dataList))
 
@@ -104,6 +106,7 @@ class ResT(webapp2.RequestHandler):
             status["error"]="Note not specified in the request "+query
             status["success"]=False
 
+        self.response.headers.add_header('Access-Control-Allow-Origin', '*')
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(status))
 
@@ -132,9 +135,16 @@ class ResT(webapp2.RequestHandler):
                         dataObject["attached_content"]=activity['object']['attachments']
                         # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
                     dataList.append(dataObject)
-            TagDataSuper.append(dataList) 
+            TagDataSuper.append(dataList)
+
+        self.response.headers.add_header('Access-Control-Allow-Origin', '*') 
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(TagDataSuper))
+
+    def options(self):      
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
+        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
 
 
 class MainHandler(webapp2.RequestHandler):
