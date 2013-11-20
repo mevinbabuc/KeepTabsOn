@@ -52,7 +52,7 @@ class ResT(webapp2.RequestHandler):
 
     #add objects to datastore
     @decorator.oauth_aware
-    def put(self,orderBy="",query=""):
+    def post(self,orderBy="",query=""):
 
         NoteTitle = self.request.get("title")
         NoteHashtags = self.request.get("hashtags")
@@ -110,10 +110,19 @@ class ResT(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(status))
 
+    def options(self):
+        self.response.set_status(200,"Ok Now")      
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
+        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
 
-    #search function using POST :| 
+
+#Rest output for processing for Search Request
+class ResTSearch(webapp2.RequestHandler):
+
+    #search function using
     @decorator.oauth_aware
-    def post(self,orderBy,query):
+    def get(self,orderBy,query):
 
         TagDataSuper=[]
         for eachHashTag in query.split(","):
@@ -141,10 +150,12 @@ class ResT(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json' 
         self.response.write(json.dumps(TagDataSuper))
 
-    def options(self):      
+    def options(self):
+        
+        self.response.set_status(200,"Ok Now")      
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
-        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE'
+        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -171,7 +182,7 @@ class login(webapp2.RequestHandler):
 application = webapp2.WSGIApplication(
     [
         webapp2.Route(r'/u/', MainHandler),
-        webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', ResT),
+        webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', ResTSearch),
         webapp2.Route(r'/tag/<query:.*>', ResT),
         ('/login', login),
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
