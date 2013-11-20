@@ -111,11 +111,11 @@ class ResT(webapp2.RequestHandler):
         self.response.write(json.dumps(status))
 
     def options(self):
-        self.response.set_status(200,"Ok Now")      
+        self.response.set_status(200,"Ok")      
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
         self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
-        self.response.headers['Access-Control-Allow-Credentials'] = True
+        self.response.headers['Access-Control-Allow-Credentials'] = 'true'
 
 
 #Rest output for processing for Search Request
@@ -153,10 +153,11 @@ class ResTSearch(webapp2.RequestHandler):
 
     def options(self):
 
-        self.response.set_status(200,"Ok Now")      
+        self.response.set_status(200,"Ok")
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
-        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
+        self.response.headers['Access-Control-Allow-Methods'] = 'POST,GET,PUT,DELETE,OPTIONS'
+        self.response.headers['Access-Control-Allow-Credentials'] = 'true'
 
 
 class MainHandler(webapp2.RequestHandler):
