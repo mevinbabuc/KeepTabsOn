@@ -51,7 +51,7 @@ class HashStore(ndb.Model):
 class ResT(webapp2.RequestHandler):
 
     #add objects to datastore
-    @decorator.oauth_aware
+    # @decorator.oauth_aware
     def post(self,orderBy="",query=""):
 
         NoteTitle = self.request.get("title")
@@ -73,7 +73,7 @@ class ResT(webapp2.RequestHandler):
         self.response.write(json.dumps(status))
 
     #view the list of objects in datastore
-    @decorator.oauth_aware
+    # @decorator.oauth_aware
     def get(self,orderBy="",query=""):
 
         qry = HashStore.query().filter(HashStore.author==users.get_current_user())
@@ -91,7 +91,7 @@ class ResT(webapp2.RequestHandler):
         self.response.write(json.dumps(dataList))
 
     #delete objects from datstore
-    @decorator.oauth_aware
+    # @decorator.oauth_aware
     def delete(self,query,orderBy=""):
 
         hashtags = query.strip()
@@ -122,7 +122,7 @@ class ResT(webapp2.RequestHandler):
 class ResTSearch(webapp2.RequestHandler):
 
     #search function using
-    @decorator.oauth_aware
+    # @decorator.oauth_aware
     def get(self,orderBy,query):
 
         TagDataSuper=[]
@@ -162,7 +162,7 @@ class ResTSearch(webapp2.RequestHandler):
 
 class MainHandler(webapp2.RequestHandler):
 
-  @decorator.oauth_aware
+  # @decorator.oauth_aware
   def get(self):
     variables = {
         'google_url': decorator.authorize_url(),
