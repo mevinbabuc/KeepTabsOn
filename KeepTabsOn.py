@@ -35,8 +35,8 @@ service = discovery.build('plus', 'v1', http=http)
 decorator = appengine.oauth2decorator_from_clientsecrets(
     CLIENT_SECRETS,
     scope=[
-      'https://www.googleapis.com/auth/plus.me',
-    ],
+        'https://www.googleapis.com/auth/plus.me',
+        ],
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
 #Hashtag datastore
@@ -48,18 +48,23 @@ class HashStore(ndb.Model):
     viewDate = ndb.DateTimeProperty(auto_now_add=True)
 
 def CSOR_Jsonify(func):
-    def wrapper():
-        func()
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-
+    def wrapper(requestObject,orderBy="",query=""):
+        dataOject=func(requestObject,orderBy="",query="")
+        requestObject.response.headers['Access-Control-Allow-Origin'] = '*'
+        requestObject.response.headers['Access-Control-Allow-Credentials'] = 'true'
+        requestObject.response.headers['Content-Type'] = 'application/json'
+        requestObject.response.write(json.dumps(dataOject))
+        #return requestObject,orderBy,query
+    return wrapper
 
 
 #Rest processing for KeepTabsOn
 class ResT(webapp2.RequestHandler):
 
     #add objects to datastore
-    @CSOR_Jsonify
+
     @decorator.oauth_aware
+    @CSOR_Jsonify
     def post(self,orderBy="",query=""):
 
         NoteTitle = self.request.get("title")
@@ -76,13 +81,13 @@ class ResT(webapp2.RequestHandler):
             status["success"]=False
             status["error"]="Unable to Add your Tab.Try again"
 
-        self.response.headers.add_header('Access-Control-Allow-Origin', '*')
-        self.response.headers['Content-Type'] = 'application/json' 
-        self.response.write(json.dumps(status))
+        return status
 
-    #view the list of objects in datastore\
-    @CSOR_Jsonify
+
+    #view the list of objects in datastore
+    #@CSOR_Jsonify
     @decorator.oauth_aware
+    @CSOR_Jsonify
     def get(self,orderBy="",query=""):
 
         qry = HashStore.query().filter(HashStore.author==users.get_current_user())
@@ -95,12 +100,10 @@ class ResT(webapp2.RequestHandler):
 
             dataList.append(dataObject)
 
-        self.response.headers.add_header('Access-Control-Allow-Origin', '*')
-        self.response.headers['Content-Type'] = 'application/json' 
-        self.response.write(json.dumps(dataList))
+        return dataList
 
     #delete objects from datstore
-    @CSOR_Jsonify
+    #@CSOR_Jsonify
     @decorator.oauth_aware
     def delete(self,query,orderBy=""):
 
@@ -116,9 +119,7 @@ class ResT(webapp2.RequestHandler):
             status["error"]="Note not specified in the request "+query
             status["success"]=False
 
-        self.response.headers.add_header('Access-Control-Allow-Origin', '*')
-        self.response.headers['Content-Type'] = 'application/json' 
-        self.response.write(json.dumps(status))
+        return status
 
     def options(self):
         self.response.set_status(200,"Ok")      
@@ -132,7 +133,7 @@ class ResT(webapp2.RequestHandler):
 class ResTSearch(webapp2.RequestHandler):
 
     #search function using
-    @CSOR_Jsonify
+    #@CSOR_Jsonify
     @decorator.oauth_aware
     def get(self,orderBy,query):
 
@@ -142,7 +143,7 @@ class ResTSearch(webapp2.RequestHandler):
             temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
             dataList=[]
             if 'items' in temp:
-            #self.response.write('got page with '+str(len( temp['items'] )))
+                #self.response.write('got page with '+str(len( temp['items'] )))
                 for activity in temp['items']:
                     dataObject={}
                     dataObject["post_url"]=activity['url'].encode('utf-8').strip()
@@ -156,11 +157,9 @@ class ResTSearch(webapp2.RequestHandler):
                         dataObject["attached_content"]=activity['object']['attachments']
                         # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
                     dataList.append(dataObject)
-            TagDataSuper.append(dataList)
+                TagDataSuper.append(dataList)
 
-        self.response.headers.add_header('Access-Control-Allow-Origin', '*') 
-        self.response.headers['Content-Type'] = 'application/json' 
-        self.response.write(json.dumps(TagDataSuper))
+        return TagDataSuper
 
     def options(self):
 
@@ -173,14 +172,14 @@ class ResTSearch(webapp2.RequestHandler):
 
 class MainHandler(webapp2.RequestHandler):
 
-  @decorator.oauth_aware
-  def get(self):
-    variables = {
-        'google_url': decorator.authorize_url(),
-        'google': decorator.has_credentials(),
+    @decorator.oauth_aware
+    def get(self):
+        variables = {
+            'google_url': decorator.authorize_url(),
+            'google': decorator.has_credentials(),
         }
-    template = JINJA_ENVIRONMENT.get_template('templates/auth.html')
-    self.response.write(template.render(variables))
+        template = JINJA_ENVIRONMENT.get_template('templates/auth.html')
+        self.response.write(template.render(variables))
 
 class login(webapp2.RequestHandler):
 
@@ -199,5 +198,5 @@ application = webapp2.WSGIApplication(
         webapp2.Route(r'/tag/<query:.*>', ResT),
         ('/login', login),
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
-    ],
+        ],
     debug=True)
