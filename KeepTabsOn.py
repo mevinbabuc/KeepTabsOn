@@ -51,11 +51,19 @@ def CSOR_Jsonify(func):
     def wrapper(*args, **kw):
 
         dataOject=func(*args, **kw)
-        args[0].response.headers['Access-Control-Allow-Origin'] = '*'
-        args[0].response.headers['Access-Control-Allow-Credentials'] = 'true'
-        args[0].response.headers['Content-Type'] = 'application/json'
+
+        try:
+            _origin = args[0].request.headers['Origin']
+        except:
+            _origin = "http://gcdc2013-keeptabson.appspot.com/"
+
+        args[0].response.headers.add_header("Access-Control-Allow-Origin", _origin)
+        args[0].response.headers.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT")
+        args[0].response.headers.add_header("Access-Control-Allow-Credentials", "true")
+        args[0].response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
+        args[0].response.headers.add_header('Content-Type', 'application/json')
+
         args[0].response.write(json.dumps(dataOject))
-        #return requestObject,orderBy,query
     return wrapper
 
 
@@ -124,11 +132,17 @@ class ResT(webapp2.RequestHandler):
         return status
 
     def options(self):
-        self.response.set_status(200,"Ok")      
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
-        self.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
-        self.response.headers['Access-Control-Allow-Credentials'] = 'true'
+        self.response.set_status(200,"Ok")
+
+        try:
+            _origin = self.request.headers['Origin']
+        except:
+            _origin = "http://gcdc2013-keeptabson.appspot.com/"
+            
+        self.response.headers.add_header("Access-Control-Allow-Origin", _origin)
+        self.response.headers.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
+        self.response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
 
 
 #Rest output for processing for Search Request
@@ -167,10 +181,16 @@ class ResTSearch(webapp2.RequestHandler):
     def options(self):
 
         self.response.set_status(200,"Ok")
-        self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
-        self.response.headers['Access-Control-Allow-Methods'] = 'POST,GET,PUT,DELETE,OPTIONS'
-        self.response.headers['Access-Control-Allow-Credentials'] = 'true'
+
+        try:
+            _origin = self.request.headers['Origin']
+        except:
+            _origin = "http://gcdc2013-keeptabson.appspot.com/"
+            
+        self.response.headers.add_header("Access-Control-Allow-Origin", _origin)
+        self.response.headers.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
+        self.response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
 
 
 class MainHandler(webapp2.RequestHandler):
