@@ -58,7 +58,6 @@ def CSOR_Jsonify(func):
             _origin = "http://gcdc2013-keeptabson.appspot.com/"
 
         args[0].response.headers.add_header("Access-Control-Allow-Origin", _origin)
-        args[0].response.headers.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT")
         args[0].response.headers.add_header("Access-Control-Allow-Credentials", "true")
         args[0].response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
         args[0].response.headers.add_header('Content-Type', 'application/json')
@@ -131,7 +130,7 @@ class ResT(webapp2.RequestHandler):
 
         return status
 
-    def options(self):
+    def options(self,query=""):
         self.response.set_status(200,"Ok")
 
         try:
@@ -178,7 +177,7 @@ class ResTSearch(webapp2.RequestHandler):
 
         return TagDataSuper
 
-    def options(self):
+    def options(self,query=""):
 
         self.response.set_status(200,"Ok")
 
