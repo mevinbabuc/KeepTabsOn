@@ -48,12 +48,13 @@ class HashStore(ndb.Model):
     viewDate = ndb.DateTimeProperty(auto_now_add=True)
 
 def CSOR_Jsonify(func):
-    def wrapper(requestObject,orderBy="",query=""):
-        dataOject=func(requestObject,orderBy="",query="")
-        requestObject.response.headers['Access-Control-Allow-Origin'] = '*'
-        requestObject.response.headers['Access-Control-Allow-Credentials'] = 'true'
-        requestObject.response.headers['Content-Type'] = 'application/json'
-        requestObject.response.write(json.dumps(dataOject))
+    def wrapper(*args, **kw):
+
+        dataOject=func(*args, **kw)
+        args[0].response.headers['Access-Control-Allow-Origin'] = '*'
+        args[0].response.headers['Access-Control-Allow-Credentials'] = 'true'
+        args[0].response.headers['Content-Type'] = 'application/json'
+        args[0].response.write(json.dumps(dataOject))
         #return requestObject,orderBy,query
     return wrapper
 
@@ -63,8 +64,8 @@ class ResT(webapp2.RequestHandler):
 
     #add objects to datastore
 
-    @decorator.oauth_aware
     @CSOR_Jsonify
+    @decorator.oauth_aware
     def post(self,orderBy="",query=""):
 
         NoteTitle = self.request.get("title")
@@ -85,9 +86,9 @@ class ResT(webapp2.RequestHandler):
 
 
     #view the list of objects in datastore
-    #@CSOR_Jsonify
-    @decorator.oauth_aware
+    
     @CSOR_Jsonify
+    @decorator.oauth_aware
     def get(self,orderBy="",query=""):
 
         qry = HashStore.query().filter(HashStore.author==users.get_current_user())
@@ -103,7 +104,8 @@ class ResT(webapp2.RequestHandler):
         return dataList
 
     #delete objects from datstore
-    #@CSOR_Jsonify
+
+    @CSOR_Jsonify
     @decorator.oauth_aware
     def delete(self,query,orderBy=""):
 
@@ -133,7 +135,8 @@ class ResT(webapp2.RequestHandler):
 class ResTSearch(webapp2.RequestHandler):
 
     #search function using
-    #@CSOR_Jsonify
+    
+    @CSOR_Jsonify
     @decorator.oauth_aware
     def get(self,orderBy,query):
 
