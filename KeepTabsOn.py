@@ -73,21 +73,27 @@ class ResT(webapp2.RequestHandler):
 
     @CSOR_Jsonify
     @decorator.oauth_aware
-    def post(self,orderBy="",query=""):
-
-        NoteTitle = self.request.get("title")
-        NoteHashtags = self.request.get("hashtags")
-
-        HashEntry=HashStore(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
-        key=HashEntry.put()
+    def post(self,query=""):
 
         status={}
         status["error"]=None
         status["success"]=True
+        key=False
+
+        NoteTitle = self.request.get("title")
+        NoteHashtags = self.request.get("hashtags")
+
+
+        if NoteHashtags and NoteTitle:
+            HashEntry=HashStore(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
+            key=HashEntry.put()
+            self.response.set_status(201,"Created")
+            status['Object']={"title":NoteTitle,"hashtag":NoteHashtags}
 
         if not key:
             status["success"]=False
             status["error"]="Unable to Add your Tab.Try again"
+            self.response.set_status(404,"Not Found")
 
         return status
 
@@ -96,17 +102,27 @@ class ResT(webapp2.RequestHandler):
     
     @CSOR_Jsonify
     @decorator.oauth_aware
-    def get(self,orderBy="",query=""):
+    def get(self,query=""):
 
         qry = HashStore.query().filter(HashStore.author==users.get_current_user())
         dataList=[]
-        for temp in qry:
-            dataObject={}
-            dataObject["title"]=temp.title
-            dataObject["hashtag"]=temp.hashtag
-            dataObject["viewDate"]=temp.viewDate.strftime("%Y/%m/%d %H:%M")
 
-            dataList.append(dataObject)
+        if qry :
+            for temp in qry:
+                dataObject={}
+                dataObject["title"]=temp.title
+                dataObject["hashtag"]=temp.hashtag
+                dataObject["viewDate"]=temp.viewDate.strftime("%Y/%m/%d %H:%M")
+
+                dataList.append(dataObject)
+
+        if len(dataList)==0:
+            self.response.set_status(404,"Not Found")
+        elif not qry :
+            self.response.set_status(400,"Bad Request")
+        else :
+            self.response.set_status(200,"Ok")
+
 
         return dataList
 
@@ -114,19 +130,24 @@ class ResT(webapp2.RequestHandler):
 
     @CSOR_Jsonify
     @decorator.oauth_aware
-    def delete(self,query,orderBy=""):
-
-        hashtags = query.strip()
-        qry = HashStore.query().filter(HashStore.author==users.get_current_user(),HashStore.hashtag==hashtags).fetch(keys_only=True)
-        ndb.delete_multi(qry)
+    def delete(self,query):
 
         status={}
-        status["error"]=None
-        status["success"]=True
+
+        hashtags = query.strip()
+
+
+        if hashtags:
+            qry = HashStore.query().filter(HashStore.author==users.get_current_user(),HashStore.hashtag==hashtags).fetch(keys_only=True)
+            ndb.delete_multi(qry)
+
+            if not qry:
+                self.response.set_status(404,"Not Found")
+            else :
+                self.response.set_status(200,"Ok")
 
         if not hashtags:
-            status["error"]="Note not specified in the request "+query
-            status["success"]=False
+            self.response.set_status(204,"No Content")
 
         return status
 
@@ -154,30 +175,41 @@ class ResTSearch(webapp2.RequestHandler):
     def get(self,orderBy,query):
 
         TagDataSuper=[]
-        for eachHashTag in query.split(","):
-            kp=decorator.http()
-            temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
-            dataList=[]
-            if 'items' in temp:
-                #self.response.write('got page with '+str(len( temp['items'] )))
-                for activity in temp['items']:
-                    dataObject={}
-                    dataObject["post_url"]=activity['url'].encode('utf-8').strip()
-                    dataObject["title"]=activity['title'].encode('utf-8').strip()
-                    dataObject["date"]=activity['published'].encode('utf-8').strip()
-                    dataObject["user"]=activity["actor"]["displayName"].strip()
-                    dataObject["user_url"]=activity["actor"]["url"].strip()
-                    dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
-                    dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
-                    if 'attachments' in activity['object'] :
-                        dataObject["attached_content"]=activity['object']['attachments']
-                        # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
-                    dataList.append(dataObject)
-                TagDataSuper.append(dataList)
+        if query:
+            for eachHashTag in query.split(","):
+                kp=decorator.http()
+                temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
+                dataList=[]
+                if 'items' in temp:
+                    #self.response.write('got page with '+str(len( temp['items'] )))
+                    for activity in temp['items']:
+                        dataObject={}
+                        dataObject["post_url"]=activity['url'].encode('utf-8').strip()
+                        dataObject["title"]=activity['title'].encode('utf-8').strip()
+                        dataObject["date"]=activity['published'].encode('utf-8').strip()
+                        dataObject["user"]=activity["actor"]["displayName"].strip()
+                        dataObject["user_url"]=activity["actor"]["url"].strip()
+                        dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
+                        dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
+                        if 'attachments' in activity['object'] :
+                            dataObject["attached_content"]=activity['object']['attachments']
+                            # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
+                        dataList.append(dataObject)
+                    TagDataSuper.append(dataList)
+            self.response.set_status(200,"Ok")
+
+        if str(TagDataSuper)=='[[]]' or len(TagDataSuper)==0:
+            self.response.set_status(404,"Not Found")
+
+        elif not query or not orderBy:
+            self.response.set_status(400,"Bad Request")
+
+        else :
+            self.response.set_status(200,"Ok")
 
         return TagDataSuper
 
-    def options(self,query=""):
+    def options(self,query="",orderBy=""):
 
         self.response.set_status(200,"Ok")
 
