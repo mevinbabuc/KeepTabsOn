@@ -78,7 +78,8 @@ def CSOR_Jsonify(func):
 
         args[0].response.headers.add_header("Access-Control-Allow-Origin", _origin)
         args[0].response.headers.add_header("Access-Control-Allow-Credentials", "true")
-        args[0].response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
+        args[0].response.headers.add_header("Access-Control-Allow-Headers",
+         "origin, x-requested-with, content-type, accept")
         args[0].response.headers.add_header('Content-Type', 'application/json')
 
         args[0].response.write(json.dumps(dataOject))
@@ -97,13 +98,14 @@ class ResT(webapp2.RequestHandler):
 
         return:
             A status object which contains the data added and error messages if any.
-            status['object'] -> The object that was added to the HashStore with title and hastag
-            status['success']-> Has a boolean value. -> True | False 
-            status['error']  -> Error message if any
+            status['object']
+            status['success']
+            status['error']
 
         Exceptions/response status codes :
-            201 -> Created    -> When a new object was saved in HashStore
-            404 -> Not Found  -> When the post variables title and hashtags was blank or NULL
+            201 -> Created   -> When a new object was saved in HashStore
+            404 -> Not Found -> When the post variables title and hashtags was
+                                blank or NULL
 
         """
 
@@ -116,7 +118,8 @@ class ResT(webapp2.RequestHandler):
         NoteHashtags = self.request.get("hashtags")
 
         if NoteHashtags and NoteTitle:
-            HashEntry=HashStore(author=users.get_current_user(),hashtag=NoteHashtags,title=NoteTitle)
+            HashEntry=HashStore(author=users.get_current_user(),
+                hashtag=NoteHashtags,title=NoteTitle)
             key=HashEntry.put()
             self.response.set_status(201,"Created")
             status['Object']={"title":NoteTitle,"hashtag":NoteHashtags}
@@ -136,12 +139,14 @@ class ResT(webapp2.RequestHandler):
         Args:
 
         Return:
-            An object containing all the Tabs of the logged in user.Each tab contains title, hashtag
-            and the date it was created.
+            An object containing all the Tabs of the logged in user.Each tab 
+            contains title, hashtag and the date it was created.
 
         Response status codes :
-            404 -> Not Found -> When there's no data in the HashStore for the particular user
-            400 -> Bad Request -> When the program is unable to search db etc. Try again later.
+            404 -> Not Found -> When there's no data in the HashStore for the
+                                particular user
+            400 -> Bad Request->When the program is unable to search db etc.
+                                Try again later.
             200 -> Ok -> When data is found and proper data is returned.
 
         """
@@ -174,15 +179,19 @@ class ResT(webapp2.RequestHandler):
         """Delete request handler to delete a Tab from HashStore
 
         Args:
-            query -> Accepts tabs(Hashtag) that has to be deleted for the particular user
+            query: Accepts tabs(Hashtag) that has to be deleted for the 
+            particular user
 
         Return:
             Delete request is not supposed to return any value
 
         Response status codes :
-            404 -> Not Found -> When the data to be deleted is not found in the HashStore
-            204 -> No Content -> When data is found in the HashStore and deleted,so there's no content to return
-            400 -> Bad Request -> When invalid query( Hashtag) was passed to the delete request
+            404 -> Not Found -> When the data to be deleted is not found in the 
+                                HashStore
+            204 -> No Content-> When data is found in the HashStore and deleted,
+                                so there's no content to return
+            400 -> Bad Request->When invalid query( Hashtag) was passed to the 
+                                delete request
 
         """
 
@@ -190,7 +199,10 @@ class ResT(webapp2.RequestHandler):
         hashtags = query.strip()
 
         if hashtags:
-            qry = HashStore.query().filter(HashStore.author==users.get_current_user(),HashStore.hashtag==hashtags).fetch(keys_only=True)
+            qry = HashStore.query().filter(
+                HashStore.author==users.get_current_user(),
+                HashStore.hashtag==hashtags).fetch(keys_only=True)
+
             ndb.delete_multi(qry)
 
             if not qry:
@@ -212,9 +224,11 @@ class ResT(webapp2.RequestHandler):
 
         self.response.set_status(200,"Ok")
         self.response.headers.add_header("Access-Control-Allow-Origin", _origin)
-        self.response.headers.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        self.response.headers.add_header("Access-Control-Allow-Methods",
+         "GET, POST, OPTIONS, PUT, DELETE")
         self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
-        self.response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
+        self.response.headers.add_header("Access-Control-Allow-Headers",
+         "origin, x-requested-with, content-type, accept")
 
 
 class ResTSearch(webapp2.RequestHandler):
@@ -224,7 +238,8 @@ class ResTSearch(webapp2.RequestHandler):
     @CSOR_Jsonify
     @decorator.oauth_aware
     def get(self,orderBy,query):
-        """Get request to search google plus for the best and recent results, based on Hashtags.
+        """Get request to search google plus for the best and recent results, 
+        based on Hashtags.
 
         Args:
             orderBy -> accepts two values ,"Best" and "Recent"
@@ -243,10 +258,12 @@ class ResTSearch(webapp2.RequestHandler):
         if query:
             for eachHashTag in query.split(","):
                 kp=decorator.http()
-                temp=service.activities().search(query=str(eachHashTag.strip()),orderBy=orderBy,maxResults=20,language="en-GB").execute(http=kp)
+                temp=service.activities().search(query=str(eachHashTag.strip()),
+                    orderBy=orderBy, maxResults=20, 
+                    language="en-GB").execute(http=kp)
+
                 dataList=[]
                 if 'items' in temp:
-                    #self.response.write('got page with '+str(len( temp['items'] )))
                     for activity in temp['items']:
                         dataObject={}
                         dataObject["post_url"]=activity['url'].encode('utf-8').strip()
@@ -258,7 +275,6 @@ class ResTSearch(webapp2.RequestHandler):
                         dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
                         if 'attachments' in activity['object'] :
                             dataObject["attached_content"]=activity['object']['attachments']
-                            # self.response.write(repr(activity['object']).encode('utf-8').strip()+"<br><br><br>")
                         dataList.append(dataObject)
                     TagDataSuper.append(dataList)
             self.response.set_status(200,"Ok")
@@ -283,9 +299,11 @@ class ResTSearch(webapp2.RequestHandler):
         
         self.response.set_status(200,"Ok")
         self.response.headers.add_header("Access-Control-Allow-Origin", _origin)
-        self.response.headers.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+        self.response.headers.add_header("Access-Control-Allow-Methods",
+         "GET, POST, OPTIONS, PUT, DELETE")
         self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
-        self.response.headers.add_header("Access-Control-Allow-Headers", "origin, x-requested-with, content-type, accept")
+        self.response.headers.add_header("Access-Control-Allow-Headers",
+         "origin, x-requested-with, content-type, accept")
 
 
 class MainHandler(webapp2.RequestHandler):
