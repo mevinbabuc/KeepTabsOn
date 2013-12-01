@@ -1,8 +1,22 @@
 #!/usr/bin/env python
-
+#
 # KeepTabsOn
 # A Sticky note that's driven by internet hashtags :D
-
+#
+# Copyright 2013 Mevin Babu Chirayath <mevinbabuc@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import httplib2
 import logging
@@ -51,7 +65,7 @@ class HashStore(ndb.Model):
     viewDate = ndb.DateTimeProperty(auto_now_add=True)
 
 def CSOR_Jsonify(func):
-    """ decorator to make all the requests CSOR compatible and jsonfy the output """
+    """ decorator to make all requests CSOR compatible and jsonfy the output """
 
     def wrapper(*args, **kw):
 
@@ -77,17 +91,19 @@ class ResT(webapp2.RequestHandler):
     @CSOR_Jsonify
     @decorator.oauth_aware
     def post(self,query=""):
-        """ Post Request handler to add data to the HashStore
+        """Post Request handler to add data to the HashStore
 
-            args   :None
+        Args:
 
-            return :status
-                    status['object'] -> The object that was added to the HashStore with title and hastag
-                    status['success']-> Has a boolean value. -> True | False 
-                    status['error']  -> Error message if any
+        return:
+            A status object which contains the data added and error messages if any.
+            status['object'] -> The object that was added to the HashStore with title and hastag
+            status['success']-> Has a boolean value. -> True | False 
+            status['error']  -> Error message if any
 
-            Exceptions/response status codes :201 -> Created    -> When a new object was saved in HashStore
-                                              404 -> Not Found  -> When the post variables title and hashtags was blank or NULL
+        Exceptions/response status codes :
+            201 -> Created    -> When a new object was saved in HashStore
+            404 -> Not Found  -> When the post variables title and hashtags was blank or NULL
 
         """
 
@@ -115,16 +131,18 @@ class ResT(webapp2.RequestHandler):
     @CSOR_Jsonify
     @decorator.oauth_aware
     def get(self,query=""):
-        """ Get request handler to retrieve the list of Tabs saved in the HashStore
+        """Get request handler to retrieve the list of Tabs saved in the HashStore
 
-            args  :None
+        Args:
 
-            return: dataList -> An object containing all the Tabs of the logged in user.Each tab contains title, hashtag
-                                and the date it was created.
+        Return:
+            An object containing all the Tabs of the logged in user.Each tab contains title, hashtag
+            and the date it was created.
 
-            Exceptions/response status codes :404 -> Not Found -> When there's no data in the HashStore for the particular user
-                                              400 -> Bad Request -> When the program is unable to search db etc. Try again later.
-                                              200 -> Ok -> When data is found and proper data is returned.
+        Response status codes :
+            404 -> Not Found -> When there's no data in the HashStore for the particular user
+            400 -> Bad Request -> When the program is unable to search db etc. Try again later.
+            200 -> Ok -> When data is found and proper data is returned.
 
         """
 
@@ -153,15 +171,18 @@ class ResT(webapp2.RequestHandler):
     @CSOR_Jsonify
     @decorator.oauth_aware
     def delete(self,query):
-        """ Delete request handler to delete a Tab from HashStore
+        """Delete request handler to delete a Tab from HashStore
 
-            args   :query -> Accepts tabs(Hashtag) that has to be deleted for the particular user
+        Args:
+            query -> Accepts tabs(Hashtag) that has to be deleted for the particular user
 
-            return :status -> No value -> Delete request is not supposed to return any value
+        Return:
+            Delete request is not supposed to return any value
 
-            response status codes :404 -> Not Found -> When the data to be deleted is not found in the HashStore
-                                   204 -> No Content -> When data is found in the HashStore and deleted,so there's no content to return
-                                   400 -> Bad Request -> When invalid query( Hashtag) was passed to the delete request
+        Response status codes :
+            404 -> Not Found -> When the data to be deleted is not found in the HashStore
+            204 -> No Content -> When data is found in the HashStore and deleted,so there's no content to return
+            400 -> Bad Request -> When invalid query( Hashtag) was passed to the delete request
 
         """
 
@@ -197,21 +218,24 @@ class ResT(webapp2.RequestHandler):
 
 
 class ResTSearch(webapp2.RequestHandler):
-    """ Class to handle GET request to search google plus using the G+ API. """
+    """Class to handle GET request to search google plus using the G+ API. """
 
 
     @CSOR_Jsonify
     @decorator.oauth_aware
     def get(self,orderBy,query):
-        """ Get request to search google plus for the best and recent results, based on Hashtags.
+        """Get request to search google plus for the best and recent results, based on Hashtags.
 
-            args   : orderBy -> accepts two values ,"Best" and "Recent"
+        Args:
+            orderBy -> accepts two values ,"Best" and "Recent"
 
-            return : TagDataSuper -> Object with search results from GPlus API.
+        Return:
+            returns an object TagDataSuper with search results from GPlus API.
 
-            response status codes : 200 -> Ok -> Found search results for the queries
-                                    404 -> Not Found -> No content found for the query provided
-                                    400 -> Bad Request -> Either of the arguments is not present.Unable to search.
+        Response status codes:
+            200 -> Ok -> Found search results for the queries
+            404 -> Not Found -> No content found for the query provided
+            400 -> Bad Request -> Either of the arguments is not present.Unable to search.
 
         """
 
