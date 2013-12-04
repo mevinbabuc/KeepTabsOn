@@ -158,7 +158,7 @@ class ResT(webapp2.RequestHandler):
             for temp in qry:
                 dataObject={}
                 dataObject["title"]=temp.title
-                dataObject["hashtag"]=temp.hashtag
+                dataObject["hashtags"]=temp.hashtag
                 dataObject["viewDate"]=temp.viewDate.strftime("%Y/%m/%d %H:%M")
 
                 dataList.append(dataObject)
