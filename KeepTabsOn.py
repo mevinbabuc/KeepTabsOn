@@ -21,6 +21,7 @@
 import httplib2
 import logging
 import os
+import re
 
 from apiclient import discovery
 from oauth2client import appengine
@@ -84,6 +85,9 @@ def CSOR_Jsonify(func):
 
         args[0].response.write(json.dumps(dataOject))
     return wrapper
+
+def HTML_Strip(html=""):
+    return re.sub('<[^<]+?>', '', html).strip()
 
 class ResT(webapp2.RequestHandler):
     """ Class to handle requests (GET, POST, DELETE) to the route /tag/ . """
@@ -272,7 +276,7 @@ class ResTSearch(webapp2.RequestHandler):
                         dataObject["user"]=activity["actor"]["displayName"].strip()
                         dataObject["user_url"]=activity["actor"]["url"].strip()
                         dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
-                        dataObject["content"]=activity['object']['content'].encode('utf-8').strip()
+                        dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
                         if 'attachments' in activity['object'] :
                             dataObject["attached_content"]=activity['object']['attachments']
                         dataList.append(dataObject)
