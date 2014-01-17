@@ -34,6 +34,10 @@ import webapp2
 import jinja2
 import json
 
+import sys
+sys.path.insert(0, 'tweepy/')
+import twitsrv.handlers
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     autoescape=True,
@@ -294,6 +298,62 @@ class ResTSearch(webapp2.RequestHandler):
 
         return TagDataSuper
 
+    @CSOR_Jsonify
+    @decorator.oauth_aware
+    def post(self,orderBy,query):
+        """Get request to search twitter for the best and recent results, 
+        based on Hashtags.
+
+        Args:
+            orderBy -> accepts two values ,"Best" and "Recent"
+
+        Return:
+            returns an object TagDataSuper with search results from GPlus API.
+
+        Response status codes:
+            200 -> Ok -> Found search results for the queries
+            404 -> Not Found -> No content found for the query provided
+            400 -> Bad Request -> Either of the arguments is not present.Unable to search.
+
+        """
+
+        TagDataSuper=[]
+
+        if query:
+            for eachHashTag in query.split(","):
+                kp=decorator.http()
+                temp=service.activities().search(query=str(eachHashTag.strip()),
+                    orderBy=orderBy, maxResults=20, 
+                    language="en-GB").execute(http=kp)
+
+                dataList=[]
+                if 'items' in temp:
+                    for activity in temp['items']:
+                        dataObject={}
+                        dataObject["post_url"]=activity['url'].encode('utf-8').strip()
+                        dataObject["title"]=activity['title'].encode('utf-8').strip()
+                        dataObject["date"]=activity['published'].encode('utf-8').strip()
+                        dataObject["user"]=activity["actor"]["displayName"].strip()
+                        dataObject["user_url"]=activity["actor"]["url"].strip()
+                        dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
+                        dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
+                        if 'attachments' in activity['object'] :
+                            dataObject["attached_content"]=activity['object']['attachments']
+                        dataList.append(dataObject)
+                    TagDataSuper.append(dataList)
+            self.response.set_status(200,"Ok")
+
+        if str(TagDataSuper)=='[[]]' or len(TagDataSuper)==0:
+            self.response.set_status(404,"Not Found")
+
+        elif not query or not orderBy:
+            self.response.set_status(400,"Bad Request")
+
+        else :
+            self.response.set_status(200,"Ok")
+
+        return TagDataSuper
+
     def options(self,query="",orderBy=""):
 
         try:
@@ -340,6 +400,12 @@ application = webapp2.WSGIApplication(
         webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', ResTSearch),
         webapp2.Route(r'/tag/<query:.*>', ResT),
         ('/login', login),
+
+        # OAuth for twitter
+        (r'/oauth/', twitsrv.handlers.MainPage),
+        (r'/oauth/callback', twitsrv.handlers.CallbackPage),
+        #(r'/.*$', twitsrv.handlers.MainPage),
+
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
         ],
     debug=True)

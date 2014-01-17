@@ -89,6 +89,22 @@ class API(object):
         require_auth = True
     )
 
+    """ statuses/update_with_media """
+    def update_with_media(self, filename, *args, **kwargs):
+        headers, post_data = API._pack_image(filename, 3072, form_field='media[]')
+        kwargs.update({'headers': headers, 'post_data': post_data})
+
+        return bind_api(
+            path='/statuses/update_with_media.json',
+            method = 'POST',
+            payload_type='status',
+            allowed_param = [
+                'status', 'possibly_sensitive', 'in_reply_to_status_id', 'lat', 'long',
+                'place_id', 'display_coordinates'
+            ],
+            require_auth=True
+        )(self, *args, **kwargs)
+
     """ statuses/destroy """
     destroy_status = bind_api(
         path = '/statuses/destroy/{id}.json',
@@ -300,7 +316,8 @@ class API(object):
     followers = bind_api(
         path = '/followers/list.json',
         payload_type = 'user', payload_list = True,
-        allowed_param = ['id', 'user_id', 'screen_name', 'cursor']
+        allowed_param = ['id', 'user_id', 'screen_name', 'cursor', 'count',
+            'skip_status', 'include_user_entities']
     )
 
     """ account/verify_credentials """
@@ -534,7 +551,7 @@ class API(object):
     list_timeline = bind_api(
         path = '/lists/statuses.json',
         payload_type = 'status', payload_list = True,
-        allowed_param = ['owner_screen_name', 'slug', 'owner_id', 'list_id', 'since_id', 'max_id', 'count']
+        allowed_param = ['owner_screen_name', 'slug', 'owner_id', 'list_id', 'since_id', 'max_id', 'count', 'include_rts']
     )
 
     get_list = bind_api(
@@ -621,7 +638,7 @@ class API(object):
     search = bind_api(
         path = '/search/tweets.json',
         payload_type = 'search_results',
-        allowed_param = ['q', 'lang', 'locale', 'since_id', 'geocode', 'show_user', 'max_id', 'since', 'until', 'result_type']
+        allowed_param = ['q', 'lang', 'locale', 'since_id', 'geocode', 'max_id', 'since', 'until', 'result_type', 'count', 'include_entities', 'from', 'to', 'source']
     )
 
     """ trends/daily """
@@ -664,6 +681,20 @@ class API(object):
         path = '/geo/similar_places.json',
         payload_type = 'place', payload_list = True,
         allowed_param = ['lat', 'long', 'name', 'contained_within']
+    )
+
+    """ help/languages.json """
+    supported_languages = bind_api(
+        path = '/help/languages.json',
+        payload_type = 'json',
+        require_auth = True
+    )
+
+    """ help/configuration """
+    configuration = bind_api(
+        path = '/help/configuration.json',
+        payload_type = 'json',
+        require_auth = True
     )
 
     """ Internal use only """
