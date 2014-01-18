@@ -13,13 +13,14 @@ CALLBACK = 'https://gcdc2013-keeptabson.appspot.com/oauth/callback'
 class MainPage(RequestHandler):
 
     def get(self):
+        context = {}
         # Build a new oauth handler and display authorization url to user.
         auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET, CALLBACK)
         try:
-            print template.render('twitsrv/main.html', {
+            context = {
                     "authurl": auth.get_authorization_url(),
                     "request_token": auth.request_token
-            })
+            }
         except tweepy.TweepError, e:
             # Failed to get a request token
             return self.response.write("Tweepy error"+str(e))
@@ -30,6 +31,8 @@ class MainPage(RequestHandler):
                 token_secret = auth.request_token.secret
         )
         request_token.put()
+
+        return template.render('twitsrv/main.html', context)
 
 # Callback page (/oauth/callback)
 class CallbackPage(RequestHandler):
@@ -60,7 +63,7 @@ class CallbackPage(RequestHandler):
 
         # So now we could use this auth handler.
         # Here we will just display the access token key&secret
-        print template.render('twitsrv/callback.html', {
+        return template.render('twitsrv/callback.html', {
             'access_token': auth.access_token
         })
 
