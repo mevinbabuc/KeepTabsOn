@@ -9,6 +9,8 @@ CONSUMER_KEY = 'heqMmsf4eLA8RtmyIhu1w'
 CONSUMER_SECRET = '7SNHt57hQVmT6O9yaiFY1m5jjSO4o6t5x0A1Ll65Tg'
 CALLBACK = 'https://gcdc2013-keeptabson.appspot.com/oauth/callback'
 
+_OAUTHobj = None
+
 # Main page handler  (/oauth/)
 class MainPage(RequestHandler):
 
@@ -51,19 +53,21 @@ class CallbackPage(RequestHandler):
             return self.response.write("Invalid token.Token not in db")
 
         # Rebuild the auth handler
-        auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-        auth.set_request_token(request_token.token_key, request_token.token_secret)
+        _OAUTHobj = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+        _OAUTHobj.set_request_token(request_token.token_key, request_token.token_secret)
 
         # Fetch the access token
         try:
-            auth.get_access_token(oauth_verifier)
+            _OAUTHobj.get_access_token(oauth_verifier)
         except tweepy.TweepError, e:
             # Failed to get access token
             return self.response.write("Tweepy error"+str(e))
 
         # So now we could use this auth handler.
         # Here we will just display the access token key&secret
-        self.response.write(template.render('twitsrv/callback.html', {
-            'access_token': auth.access_token
-        }))
+        # self.response.write(template.render('twitsrv/callback.html', {
+        #     'access_token': _OAUTHobj.access_token
+        # }))
 
+        api = tweepy.API(_OAUTHobj)
+        return self.response.write(api.test())
