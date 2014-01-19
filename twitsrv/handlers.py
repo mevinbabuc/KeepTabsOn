@@ -32,7 +32,7 @@ class MainPage(RequestHandler):
         )
         request_token.put()
 
-        return template.render('twitsrv/main.html', context)
+        self.response.write(template.render('twitsrv/main.html', context))
 
 # Callback page (/oauth/callback)
 class CallbackPage(RequestHandler):
@@ -63,7 +63,7 @@ class CallbackPage(RequestHandler):
 
         # So now we could use this auth handler.
         # Here we will just display the access token key&secret
-        return template.render('twitsrv/callback.html', {
+        self.response.write(template.render('twitsrv/callback.html', {
             'access_token': auth.access_token
-        })
+        }))
 
