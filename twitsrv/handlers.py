@@ -1,15 +1,33 @@
-import pickle
+import json
+import re
+
 from google.appengine.ext.webapp import RequestHandler, template
 from google.appengine.ext import db
+
+import webapp2
+from webapp2_extras import sessions
 import tweepy
+
 
 from twitsrv.models import OAuthToken
 
 CONSUMER_KEY = 'heqMmsf4eLA8RtmyIhu1w'
 CONSUMER_SECRET = '7SNHt57hQVmT6O9yaiFY1m5jjSO4o6t5x0A1Ll65Tg'
-CALLBACK = 'https://gcdc2013-keeptabson.appspot.com/oauth/callback'
+CALLBACK = 'http://127.0.0.1:9080/oauth/callback'
 
-_OAUTHobj = None
+class SessionHandler(webapp2.RequestHandler):
+
+    def dispatch(self):
+        self.session_store = sessions.get_store(request=self.request)
+        try:
+            webapp2.RequestHandler.dispatch(self)
+        finally:
+            self.session_store.save_sessions(self.response)
+
+    @webapp2.cached_property
+    def session(self):
+        return self.session_store.get_session(backend="datastore")
+
 
 # Main page handler  (/oauth/)
 class MainPage(RequestHandler):
@@ -37,7 +55,7 @@ class MainPage(RequestHandler):
         self.response.write(template.render('twitsrv/main.html', context))
 
 # Callback page (/oauth/callback)
-class CallbackPage(RequestHandler):
+class CallbackPage(SessionHandler):
 
     def get(self):
         oauth_token = self.request.get("oauth_token", None)
@@ -63,11 +81,55 @@ class CallbackPage(RequestHandler):
             # Failed to get access token
             return self.response.write("Tweepy error"+str(e))
 
+        self.session['_OAUTHobj'] = _OAUTHobj
+
         # So now we could use this auth handler.
         # Here we will just display the access token key&secret
         # self.response.write(template.render('twitsrv/callback.html', {
         #     'access_token': _OAUTHobj.access_token
         # }))
+        
+        self.response.write("Twitter Authorized. Now you can enjoy the power of twitter too.")
 
-        api = tweepy.API(_OAUTHobj)
-        return self.response.write(api.test())
+class TwitterSearch(SessionHandler):
+
+    def get(self,orderBy,query="No Data"):
+        _OAUTHobj = self.session.get('_OAUTHobj')
+
+        if _OAUTHobj:
+            api = tweepy.API(_OAUTHobj)
+
+            if orderBy == 'best':
+                orderBy = 'popular'
+            search_result = api.search(q=query,result_type=orderBy)
+
+            TagDataSuper=[]
+
+            for each in search_result:
+                dataObject={}
+                dataObject["post_url"] = "https://twitter.com/"+each.user.screen_name+"/status/"+each.id_str
+                dataObject["title"] = re.sub(r'#[\S]+|(http|https)://[\S]+|@[\S]+','',each.text).strip()
+                dataObject["date"] = each.created_at.strftime("%Y/%m/%d %H:%M")
+                dataObject["user"] = each.user.screen_name
+                dataObject["user_url"] = "https://twitter.com/account/redirect_by_id/"+each.user.id_str
+                dataObject["user_img_url"] = each.user.profile_image_url
+                dataObject['content']= each.text
+
+                URLdic={}
+                URLStack = []
+                for each_url in each.entities['urls']:
+                    URLStack.append(each_url['expanded_url'])
+                URLdic['turl'] = URLStack
+                dataObject["attached_content"] = URLdic
+
+                metadata={}
+                metadata['retweet'] = each.retweet_count
+                metadata['favourites_count'] = each.favorite_count
+                metadata['verified'] = each.user.verified
+                dataObject['metadata'] = metadata
+
+                TagDataSuper.append(dataObject)
+            self.response.headers.add_header('Content-Type', 'application/json')
+            return self.response.write(json.dumps(TagDataSuper))
+        else:
+            return self.redirect('/oauth/')

@@ -93,6 +93,8 @@ def CSOR_Jsonify(func):
 def HTML_Strip(html=""):
     return re.sub('<[^<]+?>', '', html).strip()
 
+##############################################################################
+
 class ResT(webapp2.RequestHandler):
     """ Class to handle requests (GET, POST, DELETE) to the route /tag/ . """
 
@@ -281,6 +283,14 @@ class ResTSearch(webapp2.RequestHandler):
                         dataObject["user_url"]=activity["actor"]["url"].strip()
                         dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
                         dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
+
+                        metadata={}
+                        metadata['replies'] = activity['object']['replies']['totalItems'].encode('utf-8').strip()
+                        metadata['plusoners'] = activity['object']['plusoners']['totalItems'].encode('utf-8').strip()
+                        metadata['resharers'] = activity['object']['resharers']['totalItems'].encode('utf-8').strip()
+
+                        dataObject['metadata'] = metadata
+
                         if 'attachments' in activity['object'] :
                             dataObject["attached_content"]=activity['object']['attachments']
                         dataList.append(dataObject)
@@ -298,61 +308,6 @@ class ResTSearch(webapp2.RequestHandler):
 
         return TagDataSuper
 
-    @CSOR_Jsonify
-    @decorator.oauth_aware
-    def post(self,orderBy,query):
-        """Get request to search twitter for the best and recent results, 
-        based on Hashtags.
-
-        Args:
-            orderBy -> accepts two values ,"Best" and "Recent"
-
-        Return:
-            returns an object TagDataSuper with search results from GPlus API.
-
-        Response status codes:
-            200 -> Ok -> Found search results for the queries
-            404 -> Not Found -> No content found for the query provided
-            400 -> Bad Request -> Either of the arguments is not present.Unable to search.
-
-        """
-
-        TagDataSuper=[]
-
-        if query:
-            for eachHashTag in query.split(","):
-                kp=decorator.http()
-                temp=service.activities().search(query=str(eachHashTag.strip()),
-                    orderBy=orderBy, maxResults=20, 
-                    language="en-GB").execute(http=kp)
-
-                dataList=[]
-                if 'items' in temp:
-                    for activity in temp['items']:
-                        dataObject={}
-                        dataObject["post_url"]=activity['url'].encode('utf-8').strip()
-                        dataObject["title"]=activity['title'].encode('utf-8').strip()
-                        dataObject["date"]=activity['published'].encode('utf-8').strip()
-                        dataObject["user"]=activity["actor"]["displayName"].strip()
-                        dataObject["user_url"]=activity["actor"]["url"].strip()
-                        dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
-                        dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
-                        if 'attachments' in activity['object'] :
-                            dataObject["attached_content"]=activity['object']['attachments']
-                        dataList.append(dataObject)
-                    TagDataSuper.append(dataList)
-            self.response.set_status(200,"Ok")
-
-        if str(TagDataSuper)=='[[]]' or len(TagDataSuper)==0:
-            self.response.set_status(404,"Not Found")
-
-        elif not query or not orderBy:
-            self.response.set_status(400,"Bad Request")
-
-        else :
-            self.response.set_status(200,"Ok")
-
-        return TagDataSuper
 
     def options(self,query="",orderBy=""):
 
@@ -393,6 +348,8 @@ class login(webapp2.RequestHandler):
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
+config={}
+config['webapp2_extras.sessions'] = {'secret_key': 'my-super-secret-key',}
 
 application = webapp2.WSGIApplication(
     [
@@ -404,8 +361,9 @@ application = webapp2.WSGIApplication(
         # OAuth for twitter
         (r'/oauth/', twitsrv.handlers.MainPage),
         (r'/oauth/callback', twitsrv.handlers.CallbackPage),
-        #(r'/.*$', twitsrv.handlers.MainPage),
+        webapp2.Route(r'/t/<orderBy:best|recent>/<query:.*>', twitsrv.handlers.TwitterSearch),
 
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
         ],
-    debug=True)
+        config=config,
+        debug=True)
