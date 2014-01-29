@@ -13,8 +13,8 @@ from twitsrv.models import OAuthToken
 
 CONSUMER_KEY = 'heqMmsf4eLA8RtmyIhu1w'
 CONSUMER_SECRET = '7SNHt57hQVmT6O9yaiFY1m5jjSO4o6t5x0A1Ll65Tg'
-# CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
-CALLBACK = 'http://127.0.0.1:9080/twitoauth/callback'
+CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
+# CALLBACK = 'http://127.0.0.1:9080/twitoauth/callback'
 
 class SessionHandler(webapp2.RequestHandler):
 
