@@ -285,9 +285,9 @@ class ResTSearch(webapp2.RequestHandler):
                         dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
 
                         metadata={}
-                        metadata['replies'] = activity['object']['replies']['totalItems'].encode('utf-8').strip()
-                        metadata['plusoners'] = activity['object']['plusoners']['totalItems'].encode('utf-8').strip()
-                        metadata['resharers'] = activity['object']['resharers']['totalItems'].encode('utf-8').strip()
+                        metadata['replies'] = activity['object']['replies']['totalItems']
+                        metadata['plusoners'] = activity['object']['plusoners']['totalItems']
+                        metadata['resharers'] = activity['object']['resharers']['totalItems']
 
                         dataObject['metadata'] = metadata
 
