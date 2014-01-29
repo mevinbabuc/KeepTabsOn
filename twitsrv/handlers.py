@@ -13,7 +13,8 @@ from twitsrv.models import OAuthToken
 
 CONSUMER_KEY = 'heqMmsf4eLA8RtmyIhu1w'
 CONSUMER_SECRET = '7SNHt57hQVmT6O9yaiFY1m5jjSO4o6t5x0A1Ll65Tg'
-CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/oauth/callback'
+# CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
+CALLBACK = 'http://127.0.0.1:9080/twitoauth/callback'
 
 class SessionHandler(webapp2.RequestHandler):
 
@@ -29,8 +30,8 @@ class SessionHandler(webapp2.RequestHandler):
         return self.session_store.get_session(backend="datastore")
 
 
-# Main page handler  (/oauth/)
-class MainPage(RequestHandler):
+# OAuth request handler  (/twitoauth/)
+class TwitOauth(RequestHandler):
 
     def get(self):
         context = {}
@@ -54,7 +55,7 @@ class MainPage(RequestHandler):
 
         self.response.write(template.render('twitsrv/main.html', context))
 
-# Callback page (/oauth/callback)
+# Callback page (/twitoauth/callback)
 class CallbackPage(SessionHandler):
 
     def get(self):
@@ -67,7 +68,7 @@ class CallbackPage(SessionHandler):
         # Lookup the request token
         request_token = OAuthToken.gql("WHERE token_key=:key", key=oauth_token).get()
         if request_token is None:
-            # We do not seem to have this request token, show an error.
+            # We doautho not seem to have this request token, show an error.
             return self.response.write("Invalid token.Token not in db")
 
         # Rebuild the auth handler
@@ -129,7 +130,8 @@ class TwitterSearch(SessionHandler):
                 dataObject['metadata'] = metadata
 
                 TagDataSuper.append(dataObject)
+
             self.response.headers.add_header('Content-Type', 'application/json')
             return self.response.write(json.dumps(TagDataSuper))
         else:
-            return self.redirect('/oauth/')
+            return self.redirect('/twitoauth/')

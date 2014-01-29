@@ -248,6 +248,74 @@ class ResTSearch(webapp2.RequestHandler):
     @CSOR_Jsonify
     @decorator.oauth_aware
     def get(self,orderBy,query):
+        """Get request to retrieve and combine data from Twitter and
+        Google Plus Search.
+
+        Args:
+            orderBy -> accepts two values ,"Best" and "Recent"
+
+        Return:
+            returns an object TagDataSuper with search results from GPlus API.
+
+        Response status codes:
+            200 -> Ok -> Found search results for the queries
+            404 -> Not Found -> No content found for the query provided
+            400 -> Bad Request -> Either of the arguments is not present.Unable to search.
+
+        """
+
+        TagDataSuper=[]
+        if query:
+            for eachHashTag in query.split(","):
+                kp=decorator.http()
+                temp=service.activities().search(query=str(eachHashTag.strip()),
+                    orderBy=orderBy, maxResults=20, 
+                    language="en-GB").execute(http=kp)
+
+                dataList=[]
+                if 'items' in temp:
+                    for activity in temp['items']:
+                        dataObject={}
+                        dataObject["post_url"]=activity['url'].encode('utf-8').strip()
+                        dataObject["title"]=activity['title'].encode('utf-8').strip()
+                        dataObject["date"]=activity['published'].encode('utf-8').strip()
+                        dataObject["user"]=activity["actor"]["displayName"].strip()
+                        dataObject["user_url"]=activity["actor"]["url"].strip()
+                        dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
+                        dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
+
+                        metadata={}
+                        metadata['replies'] = activity['object']['replies']['totalItems']
+                        metadata['plusoners'] = activity['object']['plusoners']['totalItems']
+                        metadata['resharers'] = activity['object']['resharers']['totalItems']
+
+                        dataObject['metadata'] = metadata
+
+                        if 'attachments' in activity['object'] :
+                            dataObject["attached_content"]=activity['object']['attachments']
+                        dataList.append(dataObject)
+                    TagDataSuper.append(dataList)
+            self.response.set_status(200,"Ok")
+
+        if str(TagDataSuper)=='[[]]' or len(TagDataSuper)==0:
+            self.response.set_status(404,"Not Found")
+
+        elif not query or not orderBy:
+            self.response.set_status(400,"Bad Request")
+
+        else :
+            self.response.set_status(200,"Ok")
+
+        return TagDataSuper
+
+
+class GplusSearch(webapp2.RequestHandler):
+    """Class to handle GET request to search google plus using the G+ API. """
+
+
+    @CSOR_Jsonify
+    @decorator.oauth_aware
+    def get(self,orderBy,query):
         """Get request to search google plus for the best and recent results, 
         based on Hashtags.
 
@@ -325,7 +393,7 @@ class ResTSearch(webapp2.RequestHandler):
          "origin, x-requested-with, content-type, accept")
 
 
-class MainHandler(webapp2.RequestHandler):
+class GplusOauth(webapp2.RequestHandler):
 
 
     @decorator.oauth_aware
@@ -353,14 +421,18 @@ config['webapp2_extras.sessions'] = {'secret_key': 'my-super-secret-key',}
 
 application = webapp2.WSGIApplication(
     [
-        webapp2.Route(r'/u/', MainHandler),
+        ('/login', login),
         webapp2.Route(r'/tag/<orderBy:best|recent>/<query:.*>', ResTSearch),
         webapp2.Route(r'/tag/<query:.*>', ResT),
-        ('/login', login),
+
+        # oAuth for G+
+        webapp2.Route(r'/gplusoauth/', GplusOauth),
+        webapp2.Route(r'/g/<orderBy:best|recent>/<query:.*>', GplusSearch),
+
 
         # OAuth for twitter
-        (r'/oauth/', twitsrv.handlers.MainPage),
-        (r'/oauth/callback', twitsrv.handlers.CallbackPage),
+        (r'/twitoauth/', twitsrv.handlers.TwitOauth),
+        (r'/twitoauth/callback', twitsrv.handlers.CallbackPage),
         webapp2.Route(r'/t/<orderBy:best|recent>/<query:.*>', twitsrv.handlers.TwitterSearch),
 
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
