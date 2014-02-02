@@ -28,7 +28,7 @@ import json
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.ext import ndb
-# from google.appengine.ext.webapp import RequestHandler, template
+from google.appengine.api import urlfetch
 
 from apiclient import discovery
 from oauth2client import appengine
@@ -265,7 +265,7 @@ class ResT(webapp2.RequestHandler):
          "origin, x-requested-with, content-type, accept")
 
 #/tag/best/<Query>
-class ResTSearch(webapp2.RequestHandler):
+class ResTSearch(SessionHandler):
     """Class to handle GET request to search google plus using the G+ API. """
 
 
@@ -287,6 +287,67 @@ class ResTSearch(webapp2.RequestHandler):
             400 -> Bad Request -> Either of the arguments is not present.Unable to search.
 
         """
+        node = self.request.path_info.split('/')
+        if node[-1] == '':
+            node.pop(-1)
+
+        if node[1] == 't':
+            return self.TwitterSearch(orderBy,query)
+
+        if node[1] == 'g':
+            return self.GplusSearch(orderBy,query)
+
+        if node[1] == 'tag':
+            a = self.TwitterSearch(orderBy,query)
+            b = self.GplusSearch(orderBy,query)
+
+            return a + b
+
+    @decorator.oauth_aware
+    def TwitterSearch(self,orderBy,query):
+
+        _OAUTHobj = self.session.get('_OAUTHobj')
+
+        if _OAUTHobj:
+            api = tweepy.API(_OAUTHobj)
+
+            if orderBy == 'best':
+                orderBy = 'popular'
+            search_result = api.search(q=query,result_type=orderBy)
+
+            TagDataSuper=[]
+
+            for each in search_result:
+                dataObject={}
+                dataObject["post_url"] = "https://twitter.com/"+each.user.screen_name+"/status/"+each.id_str
+                dataObject["title"] = re.sub(r'#[\S]+|(http|https)://[\S]+|@[\S]+','',each.text).strip()
+                dataObject["date"] = each.created_at.strftime("%Y/%m/%d %H:%M")
+                dataObject["user"] = each.user.screen_name
+                dataObject["user_url"] = "https://twitter.com/account/redirect_by_id/"+each.user.id_str
+                dataObject["user_img_url"] = each.user.profile_image_url
+                dataObject['content']= each.text
+
+                URLdic={}
+                URLStack = []
+                for each_url in each.entities['urls']:
+                    URLStack.append(each_url['expanded_url'])
+                URLdic['turl'] = URLStack
+                dataObject["attached_content"] = URLdic
+
+                metadata={}
+                metadata['retweet'] = each.retweet_count
+                metadata['favourites_count'] = each.favorite_count
+                metadata['verified'] = each.user.verified
+                dataObject['metadata'] = metadata
+
+                TagDataSuper.append(dataObject)
+
+            return TagDataSuper
+        else:
+            return self.redirect('/twitoauth/')        
+
+    @decorator.oauth_aware
+    def GplusSearch(self,orderBy,query):
 
         TagDataSuper=[]
         if query:
@@ -318,7 +379,7 @@ class ResTSearch(webapp2.RequestHandler):
                         if 'attachments' in activity['object'] :
                             dataObject["attached_content"]=activity['object']['attachments']
                         dataList.append(dataObject)
-                    TagDataSuper.append(dataList)
+                    TagDataSuper.extend(dataList)
             self.response.set_status(200,"Ok")
 
         if str(TagDataSuper)=='[[]]' or len(TagDataSuper)==0:
@@ -330,12 +391,12 @@ class ResTSearch(webapp2.RequestHandler):
         else :
             self.response.set_status(200,"Ok")
 
-        return TagDataSuper
+        return TagDataSuper        
 
 ###############################################################################
 
 #/g/best/<Query>
-class GplusSearch(webapp2.RequestHandler):
+'''class GplusSearch(webapp2.RequestHandler):
     """Class to handle GET request to search google plus using the G+ API. """
 
 
@@ -417,7 +478,7 @@ class GplusSearch(webapp2.RequestHandler):
         self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
         self.response.headers.add_header("Access-Control-Allow-Headers",
          "origin, x-requested-with, content-type, accept")
-
+'''
 
 class GplusOauth(webapp2.RequestHandler):
 
@@ -500,7 +561,7 @@ class CallbackPage(SessionHandler):
         self.response.write("Twitter Authorized. Now you can enjoy the power of twitter too.")
 
 #/t/best/<Query>
-class TwitterSearch(SessionHandler):
+'''class TwitterSearch(SessionHandler):
 
     def get(self,orderBy,query="No Data"):
         _OAUTHobj = self.session.get('_OAUTHobj')
@@ -544,7 +605,7 @@ class TwitterSearch(SessionHandler):
             return self.response.write(json.dumps(TagDataSuper))
         else:
             return self.redirect('/twitoauth/')
-
+'''
 ###############################################################################
 
 class login(webapp2.RequestHandler):
@@ -569,13 +630,13 @@ application = webapp2.WSGIApplication(
 
         # oAuth for G+
         webapp2.Route(r'/gplusoauth/', GplusOauth),
-        webapp2.Route(r'/g/<orderBy:best|recent>/<query:.*>', GplusSearch),
+        webapp2.Route(r'/g/<orderBy:best|recent>/<query:.*>', ResTSearch),
 
 
         # OAuth for twitter
         (r'/twitoauth/', TwitOauth),
         (r'/twitoauth/callback', CallbackPage),
-        webapp2.Route(r'/t/<orderBy:best|recent>/<query:.*>', TwitterSearch),
+        webapp2.Route(r'/t/<orderBy:best|recent>/<query:.*>', ResTSearch),
 
         webapp2.Route(decorator.callback_path, decorator.callback_handler()),
         ],
