@@ -1,3 +1,7 @@
 body{
-    background:#efefef;
+    background:white;
+}
+a{
+	display:block;
+	padding:5px;
 }

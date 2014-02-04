@@ -9,20 +9,24 @@
 
 
 <body>
-    {{ msg }}
     
     <a href="/login">Login to KeepTabsOn</a>
 
-	<form method="POST" action="/add">
-		<input type="text" name="title">
-		<input type="text" name="hashtags">
-		<input type="submit" />
-	</form>
+	<a href="/gplusoauth/">Authorize Google</a>
+	<a href="/twitoauth/">Authorize twitter</a>
 
-	<form method="POST" action="/remove">
-		<input type="text" name="noteId">
-		<input type="submit" />
-	</form>
+	<input type="text" name="search" id="search" />
 
+	<a href="/t/best/%23music" onclick="search()">Search best results for twitter</a>
+	<a href="/t/recent/%23music">Search recent results for twitter</a>
+
+	<a href="/g/best/%23music">Search best results for Google plus</a>
+	<a href="/g/recent/%23music">Search recent results for Google plus</a>
+
+<script>
+function search(){
+	alert(this.href)
+}
+</script>
 </body>
 </html>

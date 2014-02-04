@@ -393,92 +393,21 @@ class ResTSearch(SessionHandler):
 
         return TagDataSuper        
 
-###############################################################################
-
-#/g/best/<Query>
-'''class GplusSearch(webapp2.RequestHandler):
-    """Class to handle GET request to search google plus using the G+ API. """
-
-
-    @CSOR_Jsonify
-    @decorator.oauth_aware
-    def get(self,orderBy,query):
-        """Get request to search google plus for the best and recent results, 
-        based on Hashtags.
-
-        Args:
-            orderBy -> accepts two values ,"Best" and "Recent"
-
-        Return:
-            returns an object TagDataSuper with search results from GPlus API.
-
-        Response status codes:
-            200 -> Ok -> Found search results for the queries
-            404 -> Not Found -> No content found for the query provided
-            400 -> Bad Request -> Either of the arguments is not present.Unable to search.
-
-        """
-
-        TagDataSuper=[]
-        if query:
-            for eachHashTag in query.split(","):
-                kp=decorator.http()
-                temp=service.activities().search(query=str(eachHashTag.strip()),
-                    orderBy=orderBy, maxResults=20, 
-                    language="en-GB").execute(http=kp)
-
-                dataList=[]
-                if 'items' in temp:
-                    for activity in temp['items']:
-                        dataObject={}
-                        dataObject["post_url"]=activity['url'].encode('utf-8').strip()
-                        dataObject["title"]=activity['title'].encode('utf-8').strip()
-                        dataObject["date"]=activity['published'].encode('utf-8').strip()
-                        dataObject["user"]=activity["actor"]["displayName"].strip()
-                        dataObject["user_url"]=activity["actor"]["url"].strip()
-                        dataObject["user_img_url"]=activity["actor"]["image"]["url"].strip()
-                        dataObject["content"]=HTML_Strip(activity['object']['content'].encode('utf-8').strip())
-
-                        metadata={}
-                        metadata['replies'] = activity['object']['replies']['totalItems']
-                        metadata['plusoners'] = activity['object']['plusoners']['totalItems']
-                        metadata['resharers'] = activity['object']['resharers']['totalItems']
-
-                        dataObject['metadata'] = metadata
-
-                        if 'attachments' in activity['object'] :
-                            dataObject["attached_content"]=activity['object']['attachments']
-                        dataList.append(dataObject)
-                    TagDataSuper.append(dataList)
-            self.response.set_status(200,"Ok")
-
-        if str(TagDataSuper)=='[[]]' or len(TagDataSuper)==0:
-            self.response.set_status(404,"Not Found")
-
-        elif not query or not orderBy:
-            self.response.set_status(400,"Bad Request")
-
-        else :
-            self.response.set_status(200,"Ok")
-
-        return TagDataSuper
-
-
-    def options(self,query="",orderBy=""):
+    def options(self,orderBy="",query=""):
 
         try:
             _origin = self.request.headers['Origin']
         except:
             _origin = "http://gcdc2013-keeptabson.appspot.com/"
-        
+
         self.response.set_status(200,"Ok")
         self.response.headers.add_header("Access-Control-Allow-Origin", _origin)
         self.response.headers.add_header("Access-Control-Allow-Methods",
-         "GET, POST, OPTIONS, PUT, DELETE")
+         "GET")
         self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
         self.response.headers.add_header("Access-Control-Allow-Headers",
          "origin, x-requested-with, content-type, accept")
-'''
+###############################################################################
 
 class GplusOauth(webapp2.RequestHandler):
 
@@ -498,8 +427,8 @@ class GplusOauth(webapp2.RequestHandler):
 
 CONSUMER_KEY = 'heqMmsf4eLA8RtmyIhu1w'
 CONSUMER_SECRET = '7SNHt57hQVmT6O9yaiFY1m5jjSO4o6t5x0A1Ll65Tg'
-CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
-# CALLBACK = 'http://127.0.0.1:8080/twitoauth/callback'
+# CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
+CALLBACK = 'http://127.0.0.1:8080/twitoauth/callback'
 
 # OAuth request handler  (/twitoauth/)
 class TwitOauth(webapp2.RequestHandler):
@@ -560,52 +489,7 @@ class CallbackPage(SessionHandler):
         
         self.response.write("Twitter Authorized. Now you can enjoy the power of twitter too.")
 
-#/t/best/<Query>
-'''class TwitterSearch(SessionHandler):
 
-    def get(self,orderBy,query="No Data"):
-        _OAUTHobj = self.session.get('_OAUTHobj')
-
-        if _OAUTHobj:
-            api = tweepy.API(_OAUTHobj)
-
-            if orderBy == 'best':
-                orderBy = 'popular'
-            search_result = api.search(q=query,result_type=orderBy)
-
-            TagDataSuper=[]
-
-            for each in search_result:
-                dataObject={}
-                dataObject["post_url"] = "https://twitter.com/"+each.user.screen_name+"/status/"+each.id_str
-                dataObject["title"] = re.sub(r'#[\S]+|(http|https)://[\S]+|@[\S]+','',each.text).strip()
-                dataObject["date"] = each.created_at.strftime("%Y/%m/%d %H:%M")
-                dataObject["user"] = each.user.screen_name
-                dataObject["user_url"] = "https://twitter.com/account/redirect_by_id/"+each.user.id_str
-                dataObject["user_img_url"] = each.user.profile_image_url
-                dataObject['content']= each.text
-
-                URLdic={}
-                URLStack = []
-                for each_url in each.entities['urls']:
-                    URLStack.append(each_url['expanded_url'])
-                URLdic['turl'] = URLStack
-                dataObject["attached_content"] = URLdic
-
-                metadata={}
-                metadata['retweet'] = each.retweet_count
-                metadata['favourites_count'] = each.favorite_count
-                metadata['verified'] = each.user.verified
-                dataObject['metadata'] = metadata
-
-                TagDataSuper.append(dataObject)
-
-            self.response.headers.add_header('Content-Type', 'application/json')
-            self.response.set_status(200,"Ok")
-            return self.response.write(json.dumps(TagDataSuper))
-        else:
-            return self.redirect('/twitoauth/')
-'''
 ###############################################################################
 
 class login(webapp2.RequestHandler):

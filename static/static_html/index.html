@@ -9,9 +9,18 @@
 
 
 <body>
-    {{ msg }}
     
     <a href="/login">Login to KeepTabsOn</a>
-    <a href="">Add</a>
+
+	<a href="/gplusoauth/">Authorize Google</a>
+	<a href="/twitoauth/">Authorize twitter</a>
+
+	<input type="text" name="search" id="search" />
+
+	<a href="/t/best/%23music" onclick="return_search_results(this);">Search best results for twitter</a>
+	<a href="/t/recent/%23music">Search recent results for twitter</a>
+
+	<a href="/g/best/%23music">Search best results for Google plus</a>
+	<a href="/g/recent/%23music">Search recent results for Google plus</a>
 </body>
 </html>
