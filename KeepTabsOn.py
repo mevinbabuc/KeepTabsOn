@@ -402,8 +402,7 @@ class ResTSearch(SessionHandler):
 
         self.response.set_status(200,"Ok")
         self.response.headers.add_header("Access-Control-Allow-Origin", _origin)
-        self.response.headers.add_header("Access-Control-Allow-Methods",
-         "GET")
+        self.response.headers.add_header("Access-Control-Allow-Methods","GET")
         self.response.headers.add_header("Access-Control-Allow-Credentials", "true")
         self.response.headers.add_header("Access-Control-Allow-Headers",
          "origin, x-requested-with, content-type, accept")
@@ -427,8 +426,8 @@ class GplusOauth(webapp2.RequestHandler):
 
 CONSUMER_KEY = 'heqMmsf4eLA8RtmyIhu1w'
 CONSUMER_SECRET = '7SNHt57hQVmT6O9yaiFY1m5jjSO4o6t5x0A1Ll65Tg'
-# CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
-CALLBACK = 'http://127.0.0.1:8080/twitoauth/callback'
+CALLBACK = 'http://gcdc2013-keeptabson.appspot.com/twitoauth/callback'
+# CALLBACK = 'http://127.0.0.1:8080/twitoauth/callback'
 
 # OAuth request handler  (/twitoauth/)
 class TwitOauth(webapp2.RequestHandler):
