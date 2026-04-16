@@ -51,6 +51,19 @@ def load_all_data() -> pd.DataFrame:
     return df
 
 
+def _safe_float(val) -> float | None:
+    """Safely convert a value to float. Returns None if not possible."""
+    if val is None:
+        return None
+    try:
+        result = float(val)
+        if result != result:  # NaN check
+            return None
+        return result
+    except (TypeError, ValueError):
+        return None
+
+
 def _parse_dividends(dividends_raw: list[dict]) -> list[dict]:
     """Parse dividend list, ensuring dates are date objects."""
     parsed = []
@@ -66,7 +79,7 @@ def _parse_dividends(dividends_raw: list[dict]) -> list[dict]:
 def compute_dividend_yield_ttm(row) -> float | None:
     """Trailing 12-month dividend yield as percentage."""
     dividends = _parse_dividends(row["dividends_raw"])
-    price = row["current_price"]
+    price = _safe_float(row["current_price"])
     if not price or price <= 0:
         return None
 
@@ -79,8 +92,8 @@ def compute_dividend_yield_ttm(row) -> float | None:
 def compute_dividend_yield_2y_avg(row) -> float | None:
     """Average annual dividend yield over 2 years."""
     dividends = _parse_dividends(row["dividends_raw"])
-    price = row["current_price"]
-    price_2y = row["price_2y_ago"]
+    price = _safe_float(row["current_price"])
+    price_2y = _safe_float(row["price_2y_ago"])
     if not price or not price_2y or price <= 0 or price_2y <= 0:
         return None
 
@@ -124,8 +137,8 @@ def compute_dividend_growth_rate(row) -> float | None:
 
 def compute_total_return_2y(row) -> float | None:
     """Total return (capital appreciation + dividends) over 2 years as percentage."""
-    price = row["current_price"]
-    price_2y = row["price_2y_ago"]
+    price = _safe_float(row["current_price"])
+    price_2y = _safe_float(row["price_2y_ago"])
     if not price or not price_2y or price_2y <= 0:
         return None
 
@@ -135,8 +148,8 @@ def compute_total_return_2y(row) -> float | None:
 
 def compute_capital_appreciation_2y(row) -> float | None:
     """Price change over 2 years as percentage."""
-    price = row["current_price"]
-    price_2y = row["price_2y_ago"]
+    price = _safe_float(row["current_price"])
+    price_2y = _safe_float(row["price_2y_ago"])
     if not price or not price_2y or price_2y <= 0:
         return None
     return (price - price_2y) / price_2y * 100
@@ -149,7 +162,7 @@ def compute_dividend_contribution_pct(row) -> float | None:
         return None
 
     total_divs = compute_total_dividends_2y(row)
-    price_2y = row["price_2y_ago"]
+    price_2y = _safe_float(row["price_2y_ago"])
     if not price_2y or price_2y <= 0:
         return None
 
@@ -163,7 +176,12 @@ def compute_payout_ratio(row) -> float | None:
     """Estimate payout ratio using P/E as proxy. Returns ratio (not percentage)."""
     pe = row["pe_ratio"]
     price = row["current_price"]
-    if not pe or not price or pe <= 0 or price <= 0:
+    try:
+        pe = float(pe)
+        price = float(price)
+    except (TypeError, ValueError):
+        return None
+    if pe <= 0 or price <= 0:
         return None
 
     dividends = _parse_dividends(row["dividends_raw"])
